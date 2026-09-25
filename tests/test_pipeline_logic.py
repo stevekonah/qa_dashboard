@@ -77,5 +77,5 @@ def test_non_concern_answers_are_not_flagged():
 def test_missing_kobo_token_exits(monkeypatch):
     monkeypatch.delenv("KOBO_API_TOKEN", raising=False)
     with pytest.raises(SystemExit):
-        fetch_kobo_data.main()
+        fetch_kobo_data.fetch_all()
 
