@@ -3,7 +3,12 @@
 Fetches the XLSForm from KoboToolbox and writes a lean schema.json.
 Requires KOBO_API_TOKEN.
 """
-import json, os, sys, urllib.request
+import json
+import os
+import sys
+import urllib.request
+import urllib.error
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import KOBO_HOST, ASSET_UID
 
@@ -15,8 +20,18 @@ ASSETS_DIR = os.path.join(ROOT, "assets")
 def fetch_ssjson():
     url = f"https://{KOBO_HOST}/api/v2/assets/{ASSET_UID}/?format=ssjson"
     req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Kobo schema fetch failed: {e.code} {body}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Unable to reach Kobo API for schema: {e}") from e
+
+    if not isinstance(payload, dict):
+        raise RuntimeError("Unexpected schema response format from Kobo")
+    return payload
 
 
 def build_schema(ssjson):
@@ -58,6 +73,7 @@ def main():
     if not TOKEN:
         print("KOBO_API_TOKEN not set — skipping schema build", file=sys.stderr)
         return
+
     os.makedirs(ASSETS_DIR, exist_ok=True)
     ssjson = fetch_ssjson()
     schema = build_schema(ssjson)
