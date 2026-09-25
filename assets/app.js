@@ -19,8 +19,28 @@ async function init() {
     loadJSON("data/live_submissions_scored.json", []),
     loadJSON("data/live_meta.json", {}),
   ]);
-  state.data = data; state.filtered = data;
-  populateFilters(); renderMeta(meta); wireEvents(); render();
+
+  state.data = Array.isArray(data) ? data : [];
+  state.filtered = state.data;
+
+  if (!state.data.length) {
+    document.getElementById("scopeLine").textContent = "No data available — refresh the dashboard";
+    document.getElementById("updatedNote").textContent = "Awaiting first refresh";
+    document.getElementById("statStrip").innerHTML = `
+      <div class="stat-cell">
+        <span class="num">—</span>
+        <div class="lbl">No data yet</div>
+        <div class="sub">Run the pipeline or refresh Kobo data</div>
+      </div>
+    `;
+    document.querySelector("#projectsTable tbody").innerHTML = "<tr><td colspan='8'>No data available yet</td></tr>";
+    return;
+  }
+
+  populateFilters();
+  renderMeta(meta);
+  wireEvents();
+  render();
 }
 
 function populateFilters() {
