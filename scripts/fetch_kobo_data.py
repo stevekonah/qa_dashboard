@@ -3,6 +3,7 @@
 Pulls QA checklist submissions from KoboToolbox and writes flattened JSON.
 Requires KOBO_API_TOKEN.
 """
+
 import json
 import os
 import sys
@@ -22,10 +23,11 @@ def get_token():
 
 
 def strip_prefix(key):
-    for p in GROUP_PREFIXES:
-        if key.startswith(p):
-            return key[len(p):]
-    return key
+    # Prefer the longest matching prefix so the most specific Kobo group paths win.
+    matches = [p for p in GROUP_PREFIXES if key.startswith(p)]
+    if not matches:
+        return key
+    return key[len(max(matches, key=len)):]
 
 
 def fetch_all():
@@ -73,12 +75,15 @@ def flatten(raw):
             continue
 
         flat_key = strip_prefix(key)
+
+        # keep nested list values for actions, if any
         if isinstance(value, list) and flat_key == "actions":
             flat[flat_key] = [
                 {strip_prefix(k): v for k, v in item.items()} for item in value
             ]
         else:
             flat[flat_key] = value
+
     return flat
 
 
