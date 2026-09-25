@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Help · QA Dashboard</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-text">
+        <h1>QA Dashboard</h1>
+        <p>Help &amp; Glossary</p>
+      </div>
+    </div>
+    <div class="side-block">
+      <p class="side-label">Navigate</p>
+      <a class="side-link" href="index.html">← Executive overview</a>
+      <a class="side-link" href="project.html">Project diagnostics →</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar"><h2>Help &amp; Glossary</h2></div>
+
+    <section class="card">
+      <h3>Overview</h3>
+      <p>The QA Dashboard monitors quality across all active Pathfinder projects
+      using a standard checklist submitted through KoboToolbox. Data refreshes
+      daily at 06:00 UTC.</p>
+    </section>
+
+    <section class="card">
+      <h3>Key Metrics</h3>
+      <table>
+        <thead><tr><th>Metric</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><td>Overall QA Score</td><td>Average of all scored answers across submissions</td></tr>
+          <tr><td>Submission Score</td><td>Percentage of compliant answers in one checklist</td></tr>
+          <tr><td>On Track</td><td>Latest score ≥ 80%</td></tr>
+          <tr><td>Needs Attention</td><td>Latest score 60–79%</td></tr>
+          <tr><td>At Risk</td><td>Latest score &lt; 60%</td></tr>
+          <tr><td>Concern</td><td>Negative answer to a question flagged as a concern</td></tr>
+          <tr><td>Risk Score</td><td>(Concerns × 2) + ((1 − Score) × 10)</td></tr>
+          <tr><td>Risk Category</td><td>Critical ≥ 10 · High ≥ 6 · Medium ≥ 3 · Low &lt; 3</td></tr>
+          <tr><td>Programmatic Score</td><td>Average of Programmatic-pillar answers</td></tr>
+          <tr><td>MEL Score</td><td>Average of MEL-pillar answers</td></tr>
+          <tr><td>Startup / Implementation / Closeout Score</td><td>Average of questions in that project stage</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h3>Scoring Methodology</h3>
+      <ul>
+        <li>Each question is scored 1 (compliant) or 0 (non-compliant).</li>
+        <li>All questions carry equal weight.</li>
+        <li>Reverse-scored questions are already reflected in the Score column of the Scoring Checklist.</li>
+        <li>Questions with no Score value are excluded.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h3>FAQ</h3>
+      <p><strong>How often does data refresh?</strong> Daily at 06:00 UTC.</p>
+      <p><strong>Why is a high-scoring project still At Risk?</strong> The Risk Score weights concerns heavily.</p>
+      <p><strong>How do I drill into a project?</strong> Click any row in "All Projects" or use the sidebar link.</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>

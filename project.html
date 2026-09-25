@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Diagnostics · QA Dashboard</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-text">
+        <h1>QA Dashboard</h1>
+        <p>Project Diagnostics</p>
+      </div>
+    </div>
+    <div class="side-block">
+      <p class="side-label">Select project</p>
+      <select class="filter-select" id="selProject"><option value="">— Choose —</option></select>
+    </div>
+    <div class="side-block">
+      <p class="side-label">Navigate</p>
+      <a class="side-link" href="index.html">← Executive overview</a>
+      <a class="side-link" href="help.html">Help &amp; glossary →</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="projectTitle">Project Diagnostics</h2>
+        <p class="scope-line" id="projectMeta">—</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn ghost" href="index.html">Back</a>
+      </div>
+    </div>
+
+    <section class="stat-strip" id="statStrip"></section>
+
+    <section class="grid-2">
+      <div class="card">
+        <h3>Pillar Breakdown</h3>
+        <canvas id="pillarChart"></canvas>
+      </div>
+      <div class="card">
+        <h3>Stage Breakdown</h3>
+        <canvas id="stageChart"></canvas>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Performance Log</h3>
+      <div class="register-wrap">
+        <table class="register">
+          <thead>
+            <tr><th>Submission date</th><th>Score</th><th>Status</th><th>Concerns</th><th>Risk</th><th>Score Progress</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Concerns Flagged</h3>
+      <p class="card-note">Negative answers to questions flagged as concerns, sorted by stage and pillar.</p>
+      <table id="concernsTable">
+        <thead><tr><th>Stage</th><th>Pillar</th><th>Issue</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h3>All Checklist Responses</h3>
+      <input type="text" id="responseSearch" placeholder="Search question…" class="register-search">
+      <div class="register-wrap">
+        <table id="responsesTable" class="register">
+          <thead>
+            <tr><th>Question</th><th>Answer</th><th>Score</th><th>Concern</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/project.js"></script>
+</body>
+</html>
