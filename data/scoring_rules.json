@@ -1,0 +1,1362 @@
+{
+ "S.m.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No causal pathway / theory of change",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.1 Does the project have a \u201ccausal pathway\u201d (i.e., theory of change, logic model, logframe, results framework, etc.) that explains how program activities lead to short-term and long-term outcomes?"
+ },
+ "S.m.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Causal pathway not shared",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.1.1 If YES: Has the causal pathway been shared with the project team and partners / subawardees?"
+ },
+ "S.m.2|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The project lacks a MEL plan.",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.2 Does the project have a robust MEL plan that describes how the project will collect, analyze, report, and use data to track progress and assess effectiveness?"
+ },
+ "S.m.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL plan missing indicator table",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.2.1 If YES: Does the MEL plan have a table of indicators for program monitoring?"
+ },
+ "S.m.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL plan missing evaluation questions",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.2.2 IF YES: Does the MEL plan have priority questions for program evaluation?"
+ },
+ "S.m.2.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL plan missing learning agenda",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.2.3 IF YES: Does the MEL plan have a learning agenda for program learning"
+ },
+ "S.m.2.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "The MEL plan has not been approved by the donor.",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.2.4 If YES: Has the project\u2019s MEL plan been approved by the donor?"
+ },
+ "S.m.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor indicators not defined",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.3 Does the project have indicators that need to be reported to the donor?"
+ },
+ "S.m.3.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Indicator definitions / sources incomplete",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.3.1 If YES: Do all indicators have clearly documented operational definitions, data sources, calculation methodologies, and reporting frequencies?"
+ },
+ "S.m.3.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Indicator targets missing",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.3.2 If YES: Do all indicators have targets?"
+ },
+ "S.m.3.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Data collection tools not developed",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.3.3 If YES: Have data collection tools been developed?"
+ },
+ "S.m.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "The project has no Data Quality Assurance (DQA) plan.",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.4 Does the project have a Data Quality Assurance (DQA) plan?"
+ },
+ "S.m.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DQA plan missing tools / procedures",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.4.1 If YES: Does the DQA plan include practical tools and procedures such as routine data quality checklists, data quality guides, etc.?"
+ },
+ "S.m.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DQA plan missing corrective actions",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.4.2 If YES: Does the DQA plan describe how data quality issues will be addressed and prevented going forward?"
+ },
+ "S.m.5|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The project is not registered on DHIS2.",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.5 Has the project been registered in Pathfinder\u2019s DHIS2 instance?"
+ },
+ "S.m.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DHIS2 configuration incomplete",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.5.1 If YES: Are required data elements and indicators configured in DHIS2 to allow the project to begin reporting?"
+ },
+ "S.m.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DHIS2 training not completed",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.5.2 If YES: Have relevant staff been oriented and trained on how to enter data into and use DHIS2 for this project?"
+ },
+ "S.m.6|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Primary data collection planned but not prepared",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.6 Is the project conducting or planning any activities that require primary data collection (i.e., baseline survey, health facility assessments, etc)?"
+ },
+ "S.m.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "HSR review not submitted",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.6.1 If YES: Has an activity plan been submitted for Pathfinder\u2019s internal Human Subjects Research (HSR) review and determination?"
+ },
+ "S.m.7|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "None",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.7 Are project partners / subawardees responsible for collecting project data?"
+ },
+ "S.m.7.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partners not oriented on data requirements",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.7.1 If YES: Have project partners / subawardees been oriented on indicator definitions, data collection tools, data quality standards, and reporting flows and timelines?"
+ },
+ "S.m.8|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL concerns are present.",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.8 Do you have any MEL concerns with the project?"
+ },
+ "S.m.8.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL risks / concerns present",
+  "stage": "Project Startup",
+  "pillar": "MEL",
+  "question_label": "S.m.8.1 If YES: Please specify any MEL risks or concerns that may be affecting the project."
+ },
+ "S.p.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "New project staff not recruited",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.P.1 Have new project staff been recruited to this project?"
+ },
+ "S.p.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "New staff onboarding not completed",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.P.1.1 If YES: Have new staff completed their onboarding orientation?"
+ },
+ "S.p.2|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Workplan missing objectives / deliverables / timelines",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.P.2 Does the project have a workplan that describes key objectives, deliverables, and timelines?"
+ },
+ "S.p.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Key risks not identified / documented",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.1 If YES: Have key risks and challenges that could affect early implementation been identified and documented in your workplan?"
+ },
+ "S.p.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Roles / ownership not clearly assigned",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.2 If YES: Have roles and ownership for each major deliverable been clearly assigned in your workplan?"
+ },
+ "S.p.2.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan activities not logically sequenced / aligned",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.3 If YES: Are activities sequenced in a logical order and aligned with the approved budget and staffing plan in your work plan?"
+ },
+ "S.p.2.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "The workplan has not been approved by the donor.",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.4 If YES: Has the donor approved your workplan?"
+ },
+ "S.p.2.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Approved workplan not uploaded",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.4.1 If YES: Has the approved workplan been uploaded to the project shared folder?"
+ },
+ "S.p.2.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan not shared with staff",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.4.2 If YES: Has the approved workplan been shared with project staff?"
+ },
+ "S.p.2.4.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan not shared with partners",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.2.4.3 If YES: Has the approved workplan been shared with relevant partners?"
+ },
+ "S.p.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Kick-off meetings not conducted",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3 Have project kick-off meetings been conducted with key stakeholders?"
+ },
+ "S.p.3.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No meeting with government counterparts",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.1 If YES: Has the project leadership met with government counterparts?"
+ },
+ "S.p.3.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Alignment with national strategies not confirmed",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.1.1 If YES: Has the project leadership discussed and confirmed alignment with national strategies, priorities, and guidelines?"
+ },
+ "S.p.3.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No meeting with partners / subawardees",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.2 If YES: Has the project leadership met with implementing partners / subawardees?"
+ },
+ "S.p.3.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Roles / responsibilities not clearly defined",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.2.1 If YES: Have roles and responsibilities across Pathfinder and partners / subawardees been clearly defined and documented?"
+ },
+ "S.p.3.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No meeting with beneficiary stakeholders",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.3 If YES: Has the project leadership met with stakeholders representing key beneficiaries?"
+ },
+ "S.p.3.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No meeting with donor",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.3.4 If YES: Has the project leadership met with the donor?"
+ },
+ "S.p.4|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No clear reporting schedule",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4 Does the project have a clear reporting schedule for key deliverables?"
+ },
+ "S.p.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor deliverables / frequencies unclear",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4.1 If YES: Are all required donor deliverables and reporting frequencies clearly identified and understood by the project team?"
+ },
+ "S.p.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Reporting responsibilities not clearly assigned",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4.2 If YES: Are reporting responsibilities clearly assigned, including who drafts, reviews, approves, and submits, for each key deliverable?"
+ },
+ "S.p.4.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor-approved templates missing",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4.3 If YES: Does the project have donor-approved templates for each key deliverable?"
+ },
+ "S.p.4.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner reporting timelines misaligned",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4.4 If YES: Are subawardee and partner reporting timelines aligned with Pathfinder\u2019s reporting deadlines?"
+ },
+ "S.p.4.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Timelines not communicated to partners",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.4.4.1 IF YES: Have these timelines been clearly communicated to subawardees and partners?"
+ },
+ "S.p.5|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No communication plan is in place.",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.5 Does the project have a communication / dissemination plan?"
+ },
+ "S.p.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Branding guidelines missing",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.5.1 If YES: Does the project have branding guidelines?"
+ },
+ "S.p.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No external communication strategy",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.5.2 If YES: Does the project have an external communication strategy?"
+ },
+ "S.p.5.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Roles / approval processes unclear",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.5.3 If YES: Are roles and approval processes for external communications clearly understood by the project team?"
+ },
+ "S.p.5.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No clear timeline for external comms",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.5.4 If YES: Is there a clear timeline for when key external communication products should be released?"
+ },
+ "S.p.6|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Procurement needed but no plan",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6  Will the project need to procure goods or services?"
+ },
+ "S.p.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No procurement plan",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.1 If YES: Has the project developed a procurement plan?"
+ },
+ "S.p.6.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No inventory system",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.2 If YES: Has the project established an inventory system using approved template for equipment/vehicles/furniture?"
+ },
+ "S.p.6.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Assets not procured",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.3 If YES: Have all project assets been procured?"
+ },
+ "S.p.6.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Consultant recruitment needed",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.4 If YES: Does the project need to recruit consultants in this project?"
+ },
+ "S.p.6.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "RFQs/RFPs not developed",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.4.1 If YES: Have you developed the RFQs/RFPs?"
+ },
+ "S.p.6.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Consultants not selected",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.6.4.2 If YES: Have you selected your consultants?"
+ },
+ "S.p.7|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Budget not finalized",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.7 Has the project budget been finalized?"
+ },
+ "S.p.7.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Budget not donor-approved",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.7.1 If YES: Has the project budget been approved by the donor?"
+ },
+ "S.p.7.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No monthly budget for burn rate",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.7.2 If YES: Does the project have a monthly budget to track burn rate during start-up?"
+ },
+ "S.p.8|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic concerns exist.",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.8 Do you have any PROGRAMMATIC concerns with the project?"
+ },
+ "S.p.8.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic risks / concerns present",
+  "stage": "Project Startup",
+  "pillar": "Programmatic",
+  "question_label": "S.p.8.1 If YES: Please specify any programmatic risks or concerns that may be affecting the project."
+ },
+ "I.m.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The project lacks a MEL plan.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.1 Does the project have a MEL plan?"
+ },
+ "I.m.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL activities not implemented",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.1.1 If YES: Is the project implementing MEL activities outlined in the project\u2019s MEL plan?"
+ },
+ "I.m.1.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL activities not producing usable data",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.1.2 If YES: Are MEL activities producing timely, usable data for reporting and to guide project implementation?"
+ },
+ "I.m.1.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "MEL plan not adjusted",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.1.3 If YES: Has the project made any adjustments to the MEL plan due to implementation realities?"
+ },
+ "I.m.1.3.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The MEL plan has not been approved by the donor.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.1.3.1 If YES: Has the donor approved the revised MEL plan?"
+ },
+ "I.m.2|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Unable to report data on all indicators",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.2 Is the project able to routinely and reliably report data on ALL indicators collected by the project?"
+ },
+ "I.m.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Indicator data incomplete / late",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.2.1 If YES: Are indicator data complete and submitted on time?"
+ },
+ "I.m.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Indicator definitions / processes unclear",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.2.2 If YES: Are indicator definitions, data sources, calculation methodologies, and reporting processes well understood by the MEL staff?"
+ },
+ "I.m.2.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Reporting gaps not understood / addressed",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.2.a If NO: Are reporting gaps understood and linked to specific causes that are being actively addressed?"
+ },
+ "I.m.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "None",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.3 Does the project have partners / subawardees that collect and report on project data?"
+ },
+ "I.m.3.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner deliverables and reports are not delivered on time or are inaccurate.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.3.1 If YES: Are data submitted by partners / subawardees complete, on time, and in the correct format?"
+ },
+ "I.m.3.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner data accuracy not reviewed",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.3.2 If YES: Has the project reviewed the accuracy of data collected/submitted by partners/subawards?"
+ },
+ "I.m.3.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No feedback / training to partners on data quality",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.3.3 If YES: When data quality issues are identified, are feedback and/or capacity strengthening trainings provided to partners  / subawardees as needed?"
+ },
+ "I.m.4|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "DQA activities have not been implemented.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4 Has the project implemented Data Quality Assurance (DQA) activities?"
+ },
+ "I.m.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DQA activities not routine / rigorous",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4.1 If YES: Are DQA activities conducted routinely and with rigor?"
+ },
+ "I.m.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DQA findings not documented / used",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4.2 If YES: Are DQA findings documented and used to assess confidence in the reported data?"
+ },
+ "I.m.4.3|0": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Substantial data quality issues present",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4.3 If YES: Have any substantial data quality issues been identified?"
+ },
+ "I.m.4.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Recurring data quality issues not tracked",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4.4 If YES: Are recurring data quality issues being tracked to identify patterns or systemics issues?"
+ },
+ "I.m.4.5|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No mitigation for data quality issues",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.4.5 If YES: When data quality issues are identified, are appropriate mitigation actions agreed upon and taken?"
+ },
+ "I.m.5|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Routine DHIS2 reporting is not occurring.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.5 Is the project routinely reporting indicators / performance data into Pathfinder\u2019s DHIS2?"
+ },
+ "I.m.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DHIS2 data entry not timely / accurate",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.5.1 If YES: Are data being entered into DHIS2 in a timely manner and in line with reporting requirements?"
+ },
+ "I.m.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DHIS2 data incomplete (gaps)",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.5.2 If YES: Have all data for previous reporting periods been fully entered into DHIS2 with no gaps?"
+ },
+ "I.m.5.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "DHIS2 dashboards not used for tracking",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.5.3 If YES: Are DHIS2 dashboards being actively reviewed and used to track the project\u2019s progress and identify performance gaps?"
+ },
+ "I.m.6|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No routine data review meetings are being held.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6 Does the project conduct routine data review meetings to guide project implementation?"
+ },
+ "I.m.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Data not reviewed against targets",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.1 If YES: Are indictor data reviewed against targets or expected performance?"
+ },
+ "I.m.6.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No decisions / actions from data review",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.2 If YES:  Are decisions, course corrections, or follow-up actions explicitly identified based on the data reviewed?"
+ },
+ "I.m.6.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Data review notes not compiled",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.3 If YES: Are notes from data review meetings compiled and disseminated?"
+ },
+ "I.m.6.4|0": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Underperforming indicators present",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.4 If YES: Are there project indicators where Pathfinder is currently underperforming?"
+ },
+ "I.m.6.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Root causes of underperformance not analyzed",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.4.1 If YES: Have root causes of underperformance been analyzed, understood, and documented?"
+ },
+ "I.m.6.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No mitigation for underperformance",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.4.2 If YES: Have mitigation measures been put in place to address the underperformance?"
+ },
+ "I.m.6.4.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor not informed about underperformance",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.6.4.3 If YES: Has the donor been informed on how Pathfinder is addressing underperformance in project indicators?"
+ },
+ "I.m.7|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Primary data collection not prepared",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.7 Is the project conducting primary data collection activities (research studies/mid-term evaluation, etc)?"
+ },
+ "I.m.7.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "HSR review not submitted",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.7.1 If YES, has an activity plan been submitted for Pathfinder\u2019s internal Human Subjects Research (HSR) review and determination?"
+ },
+ "I.m.8|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Findings / learnings not disseminated",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.8 Has the project disseminated findings and learnings externally?"
+ },
+ "I.m.9|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL concerns are present.",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.9 Do you have any MEL concerns with the project?"
+ },
+ "I.m.9.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL risks / concerns present",
+  "stage": "Project Implementation",
+  "pillar": "MEL",
+  "question_label": "I.m.9.1 If YES: Please specify any MEL risks or concerns that may be affecting the project."
+ },
+ "I.p.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The workplan has not been approved by the donor.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.1 Does the project have a donor-approved workplan guiding implementation?"
+ },
+ "I.p.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Activities not following workplan",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.1.1 If YES: Are project activities being implemented according to the workplan?"
+ },
+ "I.p.1.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Projects are facing emerging constraints that affect timelines and scope.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.1.2 If YES: Are there emerging constraints affecting timelines, scope, or sequencing?"
+ },
+ "I.p.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan changes not managed",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.2 Has the project made any changes to the project workplan?"
+ },
+ "I.p.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan changes lacking rationale",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.2.1 If YES: Can the rationale for each change be clearly linked to implementation constraints, risk mitigation, or evidence collected from the project?"
+ },
+ "I.p.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan changes not documented",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.2.2 If YES: Have those changes been documented?"
+ },
+ "I.p.2.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Workplan changes not donor-approved",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.2.3 If YES: Has the donor approved those changes?"
+ },
+ "I.p.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor reports not submitted",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.3 Has the project submitted required donor reports?"
+ },
+ "I.p.3.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Donor reports submitted late",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.3.1 If YES: Have donor reports been submitted on time?"
+ },
+ "I.p.3.2|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "The donor raised concerns about the report.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.3.2 If YES: Did the donor raise any substantive concerns or offer any negative feedback on the content or quality of the reports?"
+ },
+ "I.p.3.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Donor concerns not resolved",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.3.2.1 If YES: Were these concerns addressed and resolved in subsequent reports or follow-ups?"
+ },
+ "I.p.3.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Reports not used for learning / course correction",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.3.3 If YES: Were reports used internally for program learning and needed course corrections (rather than solely treated as a compliance exercise)?"
+ },
+ "I.p.4|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No regular team meetings",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.4 Does the project hold regular team meetings to review the project\u2019s progress, risks, and implementation challenges?"
+ },
+ "I.p.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Team meetings not used for issue resolution",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.4.1 If YES: Are these meetings used to surface issues, make decisions, and assign follow-up actions?"
+ },
+ "I.p.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partners not engaged in project meetings",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.4.2 If YES: Are partners/subawardees engaged in regular project meetings where implementation issues and deliverables are discussed?"
+ },
+ "I.p.4.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Government counterparts not engaged",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.4.3 If YES: Are government counterparts engaged routinely to provide updates, ensure alignment, and address any implementation issues?"
+ },
+ "I.p.5|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "None",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.5 Does the project receive deliverables or reports from partners/subawardees?"
+ },
+ "I.p.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner deliverables / reports late",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.5.1 If YES: Are deliverables / reports submitted on time?"
+ },
+ "I.p.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner deliverables incomplete",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.5.2 If YES: Do deliverables have complete information?"
+ },
+ "I.p.5.3|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Deliverables / reports not satisfactory",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.5.3 If YES: Are the deliverables / reports satisfactory?"
+ },
+ "I.p.5.3.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No feedback / training to partners",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.5.3.1 If NO: Is feedback and/or training provided to the partners / subawardees to correct deliverables that don\u2019t meet expectations?"
+ },
+ "I.p.6|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "No communication plan is in place.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.6 Does the project have a communications / dissemination plan?"
+ },
+ "I.p.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Communications plan not implemented",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.6.1 IF YES: Is the project implementing the activities outlined in the communications / dissemination plan?"
+ },
+ "I.p.6.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No donor positive feedback on comms",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.6.2 If YES: Did the donor offer any positive feedback on the content or quality of the communication / dissemination activities?"
+ },
+ "I.p.7|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Monthly budget reviews are not taking place.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.7 Is the project conducting monthly review of budget versus actuals?"
+ },
+ "I.p.7.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Expenditure not aligned with budget",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.7.1 If YES: At the end of this reporting period, is cumulative project expenditure aligned with the approved budget?"
+ },
+ "I.p.8|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic concerns exist.",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.8 Do you have any PROGRAMMATIC concerns with the project?"
+ },
+ "I.p.8.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic risks / concerns present",
+  "stage": "Project Implementation",
+  "pillar": "Programmatic",
+  "question_label": "I.p.8.1 If YES: Please specify any programmatic risks or concerns that may be affecting the project."
+ },
+ "c.m.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Unable to report all indicators during close-out",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.1 Is the project able to report data on ALL indicators collected by the project during the close-out phase?"
+ },
+ "c.m.1.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Missing indicators / reporting gaps not documented",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.1.a If NO: Are any missing indicators or reporting gaps documented with explanations?"
+ },
+ "c.m.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "None",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.2 Were project partners / subawardees responsible for collecting or reporting project data?"
+ },
+ "c.m.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner deliverables and reports are not delivered on time or are inaccurate.",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.2.1 If YES: Have partners / subawardees submitted project data on time?"
+ },
+ "c.m.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner data accuracy not reviewed",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.2.2 If YES: Has the project reviewed the accuracy of data collected/submitted by partners/subawardees?"
+ },
+ "c.m.2.3|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner data missing",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.2.3 If YES: Does the project have all the data collected by partners/subawardees?"
+ },
+ "c.m.2.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Partner data not consolidated",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.2.4 If YES: Have all data submitted by partners /subawardees been consolidated into a final project dataset?"
+ },
+ "c.m.3|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "DQA activities not completed",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.3 Has the project completed Data Quality Assurance (DQA) activities?"
+ },
+ "c.m.4|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Data not fully entered into DHIS2",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.4 Have project indicators / performance data been fully entered into Pathfinder\u2019s DHIS2?"
+ },
+ "c.m.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Data not reported for final period",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.4.1 If YES: Have the data been reported through the final project period?"
+ },
+ "c.m.5|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No final data review meeting",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.5 Has the project completed a final data review meeting?"
+ },
+ "c.m.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Indicator performance not reviewed",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.5.1 If YES: Have performance of indicators been reviewed against targets?"
+ },
+ "c.m.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Key findings / lessons not documented",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.5.2 If YES: Have key findings and lessons learned been documented?"
+ },
+ "c.m.6|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Underperforming indicators present",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.6 Are there project indicators that are under performing?"
+ },
+ "c.m.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Underperforming indicators not documented",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.6.1 If YES: Are under performing indicators documented with explanations?"
+ },
+ "c.m.7|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Primary data collection not prepared",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.7 Is the project conducting primary data collection activities during close out (endline survey, end of project evaluation, etc)?"
+ },
+ "c.m.7.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "HSR review not submitted",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.7.1 If YES, has an activity plan been submitted for Pathfinder\u2019s internal Human Subjects Research (HSR) review and determination?"
+ },
+ "c.m.8|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Findings not disseminated externally",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.8 Has the project disseminated findings externally?"
+ },
+ "c.m.9|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL concerns are present.",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.9 Do you have any MEL concerns with the project?"
+ },
+ "c.m.9.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "MEL risks / concerns present",
+  "stage": "Project Closeout",
+  "pillar": "MEL",
+  "question_label": "C.m.9.1 If YES: Please specify any MEL risks or concerns that may be affecting the project."
+ },
+ "c.p.1|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Activities not completed as per workplan",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.1  Have project activities been completed as per the workplan?"
+ },
+ "c.p.1.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Work plan deviations not documented / closed",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.1.1 If YES: Have any deviations from the work plan been documented and closed with the donor?"
+ },
+ "c.p.1.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Handover not completed",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.1.2 If YES: Have responsibilities for ongoing or transitioned activities been formally handed over to partners or government representatives, where applicable?"
+ },
+ "c.p.1.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No plan for outstanding activities",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p1.a If NO: Do outstanding activities have agreed upon next steps and timelines?"
+ },
+ "c.p.2|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Deliverables not submitted",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.2 Has the project submitted all deliverables to the donor?"
+ },
+ "c.p.2.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Deliverables not donor-approved",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.2.1 If YES: Have all project deliverables received donor approval or formal acknowledgement of receipt?"
+ },
+ "c.p.2.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Deliverables not uploaded",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.2.2 If YES: Have all project deliverables been uploaded to Pathfinder's Award Deliverables Library?"
+ },
+ "c.p.2.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No plan for outstanding deliverables",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.2.a If NO: Do outstanding deliverables have agreed upon next steps and timelines with the donor?"
+ },
+ "c.p.3|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Dissemination / close-out events not held",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.3 Has the project completed relevant dissemination / close-out events?"
+ },
+ "c.p.4|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Final documents not filed",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.4 Have final project documents been properly filed within Pathfinder?"
+ },
+ "c.p.4.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Final documents not stored properly",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.4.1 If YES: Have final versions of key project documents been cleaned and stored in appropriate project folders?"
+ },
+ "c.p.4.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Tools / products not uploaded to Atlas",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.4.2 If YES: Have finalized tools, products, and learning outputs with broader relevance for Pathfinders been uploaded into Pathfinder Atlas?"
+ },
+ "c.p.5|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Documents / products not disseminated",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.5 Has the project disseminated relevant documents / products?"
+ },
+ "c.p.5.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Final versions not shared",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.5.1 If YES: Have final versions been shared with relevant stakeholders?"
+ },
+ "c.p.5.2|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Not uploaded externally",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.5.2 If YES: Have final versions been uploaded on Pathfinder\u2019s external website?"
+ },
+ "c.p.6|1": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Monthly budget reviews are not taking place.",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.6 Is the project conducting monthly review of budget versus actuals?"
+ },
+ "c.p.6.1|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Expenditure not aligned with budget",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.6.1 If YES: At the end of this reporting period, is cumulative project expenditure aligned with the approved budget?"
+ },
+ "c.p.7|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Assets not accounted / returned / disposed",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.7 Have all project assets (equipment, vehicles, materials) been accounted for, returned, or disposed of according to policy?"
+ },
+ "c.p.7.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No plan for asset concerns",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.7.a If NO: Is there a plan to address concerns related to project assets?"
+ },
+ "c.p.8|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "Agreements / contracts not closed out",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.8 Have all project agreements, contracts, consultancies, and/or vendor obligations been closed out / terminated according to the policy?"
+ },
+ "c.p.8.a|1": {
+  "score": 1,
+  "is_concern": 0,
+  "issue": "No plan for procurement close out",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.8.a If NO: Is there a plan to address concerns related to procurement close out?"
+ },
+ "c.p.9|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic concerns exist.",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.9 Do you have any PROGRAMMATIC concerns with the project?"
+ },
+ "c.p.9.1|0": {
+  "score": 1,
+  "is_concern": 1,
+  "issue": "Programmatic risks / concerns present",
+  "stage": "Project Closeout",
+  "pillar": "Programmatic",
+  "question_label": "C.p.9.1 IF YES: Please specify any programmatic risks or concerns that may be affecting the project."
+ }
+}
