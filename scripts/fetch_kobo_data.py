@@ -3,8 +3,13 @@
 Pulls QA checklist submissions from KoboToolbox and writes flattened JSON.
 Requires KOBO_API_TOKEN.
 """
-import json, os, sys, urllib.request, urllib.error
+import json
+import os
+import sys
+import urllib.request
+import urllib.error
 from datetime import datetime, timezone
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import KOBO_HOST, ASSET_UID, GROUP_PREFIXES, TOP_LEVEL_KEEP
 
@@ -28,28 +33,45 @@ def fetch_all():
     if not token:
         print("KOBO_API_TOKEN not set.", file=sys.stderr)
         raise SystemExit(1)
+
     results = []
     url = f"https://{KOBO_HOST}/api/v2/assets/{ASSET_UID}/data/?format=json&limit=1000"
+
     while url:
         req = urllib.request.Request(url, headers={"Authorization": f"Token {token}"})
         try:
             with urllib.request.urlopen(req, timeout=60) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
-            print(f"Kobo API error {e.code}: {e.read().decode('utf-8')}", file=sys.stderr)
-            break
-        results.extend(payload.get("results", []))
+            body = e.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Kobo API error {e.code}: {body}") from e
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"Unable to reach Kobo API: {e}") from e
+
+        if not isinstance(payload, dict):
+            raise RuntimeError("Unexpected Kobo response format")
+
+        page_results = payload.get("results")
+        if not isinstance(page_results, list):
+            raise RuntimeError("Kobo response is missing a valid 'results' list")
+
+        results.extend(page_results)
         url = payload.get("next")
+
     return results
 
 
 def flatten(raw):
     flat = {}
+    if not isinstance(raw, dict):
+        return flat
+
     for key, value in raw.items():
         if key.startswith("_") and key not in TOP_LEVEL_KEEP:
             continue
         if key in ("formhub/uuid", "meta/instanceID", "__version__"):
             continue
+
         flat_key = strip_prefix(key)
         if isinstance(value, list) and flat_key == "actions":
             flat[flat_key] = [
@@ -82,4 +104,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
