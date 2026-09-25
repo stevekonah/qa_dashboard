@@ -1,0 +1,30 @@
+name: Refresh QA Dashboard data
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install openpyxl
+      - name: Run pipeline
+        env:
+          KOBO_API_TOKEN: ${{ secrets.KOBO_API_TOKEN }}
+        run: python scripts/run_pipeline.py
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/ assets/schema.json
+          git diff --staged --quiet || git commit -m "Refresh QA data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push
