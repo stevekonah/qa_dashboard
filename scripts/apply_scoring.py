@@ -10,7 +10,10 @@ Enriches each submission with:
   - StartupScore, ImplementationScore, CloseoutScore
   - meta_* (project metadata)
 """
-import json, os, sys
+import json
+import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     NON_QUESTION_FIELDS,
@@ -30,10 +33,25 @@ STAGE_MAP = {
 
 
 def to_answer(value):
-    if value in (1, "1", "Yes", "yes", True):
-        return 1
-    if value in (0, "0", "No", "no", False):
-        return 0
+    if value is None:
+        return None
+
+    if isinstance(value, bool):
+        return int(value)
+
+    if isinstance(value, (int, float)):
+        if value in (0, 1):
+            return int(value)
+        return None
+
+    if isinstance(value, str):
+        cleaned = value.strip().lower()
+        if cleaned in {"1", "yes", "y", "true"}:
+            return 1
+        if cleaned in {"0", "no", "n", "false"}:
+            return 0
+        return None
+
     return None
 
 
@@ -48,7 +66,6 @@ def stage_from_question(q):
 def score_submission(sub, rules, issue_tracking, project_lookup):
     scored = dict(sub)
 
-    # Attach project metadata
     project_meta = project_lookup.get(sub.get("project"))
     if project_meta:
         for k, v in project_meta.items():
@@ -83,15 +100,14 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         scored[f"{key}_IsConcern"] = 1 if (rule["is_concern"] == 1 and rule["score"] == 0) else 0
         answer_scores.append(rule["score"])
 
-        # Stage / pillar breakdowns
         stage = rule.get("stage") or stage_from_question(key)
         if stage in stage_scores:
             stage_scores[stage].append(rule["score"])
+
         pillar = rule.get("pillar")
         if pillar in pillar_scores:
             pillar_scores[pillar].append(rule["score"])
 
-        # Concerns
         if rule["is_concern"] == 1 and rule["score"] == 0:
             concerns.append({
                 "question": key,
@@ -110,7 +126,6 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
     scored["ConcernCount"] = len(concerns)
     scored["ConcernQuestions"] = concerns
 
-    # Status
     s = scored["SubmissionScore"]
     if s is None:
         scored["ProjectStatus"] = "No Data"
@@ -121,7 +136,6 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
     else:
         scored["ProjectStatus"] = "At Risk"
 
-    # Risk
     if s is not None:
         scored["RiskScore"] = round(
             (len(concerns) * RISK_CONCERN_WEIGHT)
@@ -145,13 +159,11 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
 
     scored["RiskAlert"] = "⚠ High Risk" if (s is not None and s < 60) else "OK"
 
-    # Stage scores
     for stage, arr in stage_scores.items():
         scored[f"{stage}Score"] = (
             round(100 * sum(arr) / len(arr), 1) if arr else None
         )
 
-    # Pillar scores
     for pillar, arr in pillar_scores.items():
         scored[f"{pillar}Score"] = (
             round(100 * sum(arr) / len(arr), 1) if arr else None
@@ -184,4 +196,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
