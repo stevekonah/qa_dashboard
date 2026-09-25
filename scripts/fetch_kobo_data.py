@@ -8,9 +8,12 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import KOBO_HOST, ASSET_UID, GROUP_PREFIXES, TOP_LEVEL_KEEP
 
-TOKEN = os.environ.get("KOBO_API_TOKEN", "").strip()
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
+
+
+def get_token():
+    return os.environ.get("KOBO_API_TOKEN", "").strip()
 
 
 def strip_prefix(key):
@@ -21,13 +24,14 @@ def strip_prefix(key):
 
 
 def fetch_all():
-    if not TOKEN:
+    token = get_token()
+    if not token:
         print("KOBO_API_TOKEN not set.", file=sys.stderr)
-        return []
+        raise SystemExit(1)
     results = []
     url = f"https://{KOBO_HOST}/api/v2/assets/{ASSET_UID}/data/?format=json&limit=1000"
     while url:
-        req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"})
+        req = urllib.request.Request(url, headers={"Authorization": f"Token {token}"})
         try:
             with urllib.request.urlopen(req, timeout=60) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
@@ -78,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

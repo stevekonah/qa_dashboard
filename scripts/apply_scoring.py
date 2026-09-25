@@ -70,14 +70,17 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         answer = to_answer(value)
         if answer is None:
             scored[f"{key}_AnswerC"] = None
+            scored[f"{key}_IsConcern"] = 0
             continue
 
         rule = rules.get(f"{key}|{answer}")
         if rule is None or rule["score"] is None:
             scored[f"{key}_AnswerC"] = None
+            scored[f"{key}_IsConcern"] = 0
             continue
 
         scored[f"{key}_AnswerC"] = rule["score"]
+        scored[f"{key}_IsConcern"] = 1 if (rule["is_concern"] == 1 and rule["score"] == 0) else 0
         answer_scores.append(rule["score"])
 
         # Stage / pillar breakdowns
@@ -181,3 +184,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
