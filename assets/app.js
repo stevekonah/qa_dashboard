@@ -68,6 +68,12 @@ function resetFilters() {
   applyFilters();
 }
 
+function stageMatches(row, stage) {
+  if (!stage) return true;
+  const key = `${stage}Score`;
+  return row[key] != null;
+}
+
 function applyFilters() {
   const f = state.filters;
   state.filtered = state.data.filter(d => {
@@ -78,6 +84,7 @@ function applyFilters() {
       && (!f.project || d.project === f.project)
       && (!f.funding || d.meta_funding_source === f.funding)
       && (!f.tech || d.meta_technical_area === f.tech)
+      && (!f.stage || stageMatches(d, f.stage))
       && (!f.status || d.ProjectStatus === f.status);
   });
   render();
@@ -186,7 +193,7 @@ function renderPillarGrid() {
 function renderRiskTable() {
   const atRisk = state.filtered.filter(d => d.ProjectStatus === "At Risk");
   document.querySelector("#riskTable tbody").innerHTML = atRisk.length
-    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${d.project || "—"}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${(d.RiskCategory||"").toLowerCase()}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
+    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${d.project || "—"}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${(d.RiskCategory || "Low").toLowerCase()}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
     : "<tr><td colspan='4'>No projects at risk 🎉</td></tr>";
 }
 
@@ -257,3 +264,4 @@ function formatAmount(n) {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+

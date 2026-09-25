@@ -23,7 +23,7 @@ def strip_prefix(key):
 def fetch_all():
     if not TOKEN:
         print("KOBO_API_TOKEN not set.", file=sys.stderr)
-        return []
+        raise SystemExit(1)
     results = []
     url = f"https://{KOBO_HOST}/api/v2/assets/{ASSET_UID}/data/?format=json&limit=1000"
     while url:
@@ -78,3 +78,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
