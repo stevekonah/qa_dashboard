@@ -4,10 +4,19 @@
 KOBO_HOST = "kf.kobotoolbox.org"
 ASSET_UID = "asWTVYqCQhbVbkWBukm6p8"
 
-# Group prefixes to strip from flattened field names
+# The code below strips Kobo group prefixes from flattened field names.
+# Keep the longest prefixes first so they match before shorter ones.
 GROUP_PREFIXES = [
-    "startup/", "implementation/", "closeout/",
-    "project_profile/", "actions_group/",
+    "begin_group_r9y7qKNWI/group_modulimple/group_progimple/",
+    "begin_group_r9y7qKNWI/group_modulimple/group_melimple_001/",
+    "begin_group_r9y7qKNWI/group_modulstart/group_progstart/",
+    "begin_group_r9y7qKNWI/group_modulstart/group_melimple/",
+    "startsurvey/",
+    "startup/",
+    "implementation/",
+    "closeout/",
+    "project_profile/",
+    "actions_group/",
 ]
 
 # Top-level fields to keep
@@ -26,6 +35,12 @@ NON_QUESTION_FIELDS = {
     "actions", "strengths", "priority_gaps",
     "supervisor_comment", "action_picture",
     "indicator_comment",
+    "project_status", "technical_focus",
+    "technical_focus_health", "technical_focus_climate",
+    "technical_focus_leadership",
+    "qa_checklist_focal", "project_director",
+    "funding_source", "technical_area",
+    "project_title", "serenic_code"
 }
 
 # --- Scoring thresholds ---
