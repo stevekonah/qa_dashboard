@@ -2,7 +2,7 @@
 """
 Enriches each submission with:
   - <question>_AnswerC    0/1 effective score
-  - <question>_IsConcern  0/1
+  - <question>_IsConcern  0/1 (flagged for prominence/filtering, independent of score)
   - <question>_IssueTracking  str (only for open-ended concern questions)
   - SubmissionScore, ConcernCount, ConcernQuestions
   - ProjectStatus, RiskScore, RiskCategory, RiskAlert
@@ -106,14 +106,13 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         base_rule = get_question_rule(rules, key)
         exact_rule = rules.get(f"{key}|{answer}")
 
-        if exact_rule is not None:
-            score = 1
-            is_concern = 0
-            rule_for_metadata = exact_rule
-        else:
-            score = 0
-            is_concern = 1 if base_rule.get("is_concern") == 1 else 0
-            rule_for_metadata = base_rule
+        # Scoring: 1 if answer matches checklist rule, 0 otherwise
+        score = 1 if exact_rule is not None else 0
+        
+        # Concern flag: independent of score, based on checklist marking
+        is_concern = 1 if base_rule.get("is_concern") == 1 else 0
+        
+        rule_for_metadata = exact_rule or base_rule
 
         scored[f"{key}_AnswerC"] = score
         scored[f"{key}_IsConcern"] = is_concern
@@ -127,6 +126,7 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         if pillar in pillar_scores:
             pillar_scores[pillar].append(score)
 
+        # Add to concerns list if flagged as a concern (for reporting/filtering)
         if is_concern == 1:
             concerns.append({
                 "question": key,
