@@ -33,6 +33,7 @@ STAGE_MAP = {
 
 
 def to_answer(value):
+    """Normalize a Kobo answer to 0/1. Return None for missing or invalid responses."""
     if value is None:
         return None
 
@@ -46,10 +47,12 @@ def to_answer(value):
 
     if isinstance(value, str):
         cleaned = value.strip().lower()
-        if cleaned in {"1", "yes", "y", "true"}:
+        if cleaned in {"1", "yes", "y", "true", "t"}:
             return 1
-        if cleaned in {"0", "no", "n", "false"}:
+        if cleaned in {"0", "no", "n", "false", "f"}:
             return 0
+        if cleaned in {"", "na", "n/a", "none", "null"}:
+            return None
         return None
 
     return None
@@ -63,9 +66,14 @@ def stage_from_question(q):
     return STAGE_MAP.get(prefix)
 
 
-def find_question_rule(rules, key):
-    """Return the checklist rule for a question, preferring the explicit 0/1 key that exists."""
+def get_question_rule(rules, key):
+    """Return the canonical checklist rule for a question, whichever polarity exists."""
     return rules.get(f"{key}|0") or rules.get(f"{key}|1")
+
+
+def question_is_scoreable(rules, key):
+    """A question is scoreable only if at least one answer polarity is defined in rules."""
+    return f"{key}|0" in rules or f"{key}|1" in rules
 
 
 def score_submission(sub, rules, issue_tracking, project_lookup):
@@ -86,9 +94,7 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
             continue
         if key.startswith("_") or key.startswith("meta/"):
             continue
-
-        base_rule = find_question_rule(rules, key)
-        if base_rule is None:
+        if not question_is_scoreable(rules, key):
             continue
 
         answer = to_answer(value)
@@ -97,32 +103,36 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
             scored[f"{key}_IsConcern"] = 0
             continue
 
-        rule = rules.get(f"{key}|{answer}")
-        if rule is not None:
+        base_rule = get_question_rule(rules, key)
+        exact_rule = rules.get(f"{key}|{answer}")
+
+        if exact_rule is not None:
             score = 1
             is_concern = 0
+            rule_for_metadata = exact_rule
         else:
             score = 0
             is_concern = 1 if base_rule.get("is_concern") == 1 else 0
+            rule_for_metadata = base_rule
 
         scored[f"{key}_AnswerC"] = score
         scored[f"{key}_IsConcern"] = is_concern
         answer_scores.append(score)
 
-        stage = base_rule.get("stage") or stage_from_question(key)
+        stage = rule_for_metadata.get("stage") or stage_from_question(key)
         if stage in stage_scores:
             stage_scores[stage].append(score)
 
-        pillar = base_rule.get("pillar")
+        pillar = rule_for_metadata.get("pillar")
         if pillar in pillar_scores:
             pillar_scores[pillar].append(score)
 
         if is_concern == 1:
             concerns.append({
                 "question": key,
-                "issue": base_rule.get("issue") or key,
-                "stage": base_rule.get("stage"),
-                "pillar": base_rule.get("pillar"),
+                "issue": rule_for_metadata.get("issue") or key,
+                "stage": rule_for_metadata.get("stage"),
+                "pillar": rule_for_metadata.get("pillar"),
             })
 
         if key in issue_tracking:
