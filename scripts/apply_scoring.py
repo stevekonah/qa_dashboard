@@ -79,10 +79,19 @@ def question_is_scoreable(rules, key):
 def score_submission(sub, rules, issue_tracking, project_lookup):
     scored = dict(sub)
 
-    project_meta = project_lookup.get(sub.get("project"))
+    # Use kobo_name (internal project identifier) as the key for metadata joining
+    project_identifier = sub.get("project")
+    project_meta = project_lookup.get(project_identifier)
+    
     if project_meta:
         for k, v in project_meta.items():
             scored[f"meta_{k}"] = v
+    
+    # Normalize project display name: use project_title if available, else fallback to project
+    if project_meta and project_meta.get("project_title"):
+        scored["_display_project_name"] = project_meta.get("project_title")
+    else:
+        scored["_display_project_name"] = project_identifier or "Unknown"
 
     answer_scores = []
     concerns = []
@@ -201,6 +210,7 @@ def main():
     with open(os.path.join(DATA_DIR, "active_projects.json")) as f:
         projects = json.load(f)
 
+    # Build project lookup keyed by kobo_name (the stable internal identifier)
     project_lookup = {p["kobo_name"]: p for p in projects}
 
     scored = [
