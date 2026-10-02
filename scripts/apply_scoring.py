@@ -63,6 +63,11 @@ def stage_from_question(q):
     return STAGE_MAP.get(prefix)
 
 
+def find_question_rule(rules, key):
+    """Return the checklist rule for a question, preferring the explicit 0/1 key that exists."""
+    return rules.get(f"{key}|0") or rules.get(f"{key}|1")
+
+
 def score_submission(sub, rules, issue_tracking, project_lookup):
     scored = dict(sub)
 
@@ -81,7 +86,9 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
             continue
         if key.startswith("_") or key.startswith("meta/"):
             continue
-        if f"{key}|0" not in rules and f"{key}|1" not in rules:
+
+        base_rule = find_question_rule(rules, key)
+        if base_rule is None:
             continue
 
         answer = to_answer(value)
@@ -91,29 +98,31 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
             continue
 
         rule = rules.get(f"{key}|{answer}")
-        if rule is None or rule["score"] is None:
-            scored[f"{key}_AnswerC"] = None
-            scored[f"{key}_IsConcern"] = 0
-            continue
+        if rule is not None:
+            score = 1
+            is_concern = 0
+        else:
+            score = 0
+            is_concern = 1 if base_rule.get("is_concern") == 1 else 0
 
-        scored[f"{key}_AnswerC"] = rule["score"]
-        scored[f"{key}_IsConcern"] = 1 if (rule["is_concern"] == 1 and rule["score"] == 0) else 0
-        answer_scores.append(rule["score"])
+        scored[f"{key}_AnswerC"] = score
+        scored[f"{key}_IsConcern"] = is_concern
+        answer_scores.append(score)
 
-        stage = rule.get("stage") or stage_from_question(key)
+        stage = base_rule.get("stage") or stage_from_question(key)
         if stage in stage_scores:
-            stage_scores[stage].append(rule["score"])
+            stage_scores[stage].append(score)
 
-        pillar = rule.get("pillar")
+        pillar = base_rule.get("pillar")
         if pillar in pillar_scores:
-            pillar_scores[pillar].append(rule["score"])
+            pillar_scores[pillar].append(score)
 
-        if rule["is_concern"] == 1 and rule["score"] == 0:
+        if is_concern == 1:
             concerns.append({
                 "question": key,
-                "issue": rule["issue"] or key,
-                "stage": rule["stage"],
-                "pillar": rule["pillar"],
+                "issue": base_rule.get("issue") or key,
+                "stage": base_rule.get("stage"),
+                "pillar": base_rule.get("pillar"),
             })
 
         if key in issue_tracking:
