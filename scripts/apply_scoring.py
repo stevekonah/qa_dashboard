@@ -81,14 +81,13 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
 
     # Use kobo_name (internal project identifier) as the key for metadata joining
     project_identifier = sub.get("project")
-    project_meta = project_lookup.get(project_identifier)
-    
-    if project_meta:
-        for k, v in project_meta.items():
-            scored[f"meta_{k}"] = v
-    
-    # Normalize project display name: use project_title if available, else fallback to project
-    if project_meta and project_meta.get("project_title"):
+    project_meta = project_lookup.get(project_identifier) if isinstance(project_lookup, dict) else None
+
+    if isinstance(project_meta, dict):
+        for key, value in project_meta.items():
+            scored[f"meta_{key}"] = value
+
+    if isinstance(project_meta, dict) and project_meta.get("project_title"):
         scored["_display_project_name"] = project_meta.get("project_title")
     else:
         scored["_display_project_name"] = project_identifier or "Unknown"
@@ -114,14 +113,16 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
 
         base_rule = get_question_rule(rules, key)
         exact_rule = rules.get(f"{key}|{answer}")
-
-        # Scoring: 1 if answer matches checklist rule, 0 otherwise
-        score = 1 if exact_rule is not None else 0
-        
-        # Concern flag: independent of score, based on checklist marking
-        is_concern = 1 if base_rule.get("is_concern") == 1 else 0
-        
         rule_for_metadata = exact_rule or base_rule
+
+        if rule_for_metadata is None:
+            scored[f"{key}_AnswerC"] = None
+            scored[f"{key}_IsConcern"] = 0
+            continue
+
+        # Use the checklist score for the relevant answer instead of assuming any defined rule is a pass.
+        score = rule_for_metadata.get("score", 0)
+        is_concern = 1 if rule_for_metadata.get("is_concern") == 1 else 0
 
         scored[f"{key}_AnswerC"] = score
         scored[f"{key}_IsConcern"] = is_concern
@@ -135,7 +136,6 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         if pillar in pillar_scores:
             pillar_scores[pillar].append(score)
 
-        # Add to concerns list if flagged as a concern (for reporting/filtering)
         if is_concern == 1:
             concerns.append({
                 "question": key,
