@@ -1,0 +1,441 @@
+/* ============================================================
+   QA Dashboard — Executive Overview
+   ============================================================ */
+
+const state = {
+  data: [], filtered: [],
+  filters: { region: "", country: "", project: "", funding: "", tech: "", stage: "", status: "", search: "" },
+  sort: { key: "score", dir: "asc" },
+  charts: {},
+};
+
+function escapeHtml(value) {
+  const safeValue = value == null ? "" : String(value);
+  return safeValue.replace(/[&<>\"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[char]));
+}
+
+function safeText(value, fallback = "—") {
+  const text = value == null || value === "" ? fallback : String(value);
+  return escapeHtml(text);
+}
+
+function displayProjectName(row) {
+  if (!row) return "Unknown project";
+  return row._display_project_name || row.meta_project_title || row.project_title || row.project || "Unknown project";
+}
+
+function projectLookupByKey(projectKey) {
+  return state.data.find((entry) => entry.project === projectKey) || null;
+}
+
+async function loadJSON(path, fallback) {
+  try {
+    const response = await fetch(path, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Unable to load ${path}:`, error);
+    return fallback;
+  }
+}
+
+function showErrorState(message) {
+  const scopeLine = document.getElementById("scopeLine");
+  if (scopeLine) scopeLine.textContent = message;
+  const statStrip = document.getElementById("statStrip");
+  if (statStrip) {
+    statStrip.innerHTML = `
+      <div class="stat-card">
+        <span class="stat-value danger">!</span>
+        <div class="stat-label">Dashboard Error</div>
+        <div class="stat-sublabel">${safeText(message)}</div>
+      </div>
+    `;
+  }
+  const tableBody = document.querySelector("#projectsTable tbody");
+  if (tableBody) {
+    tableBody.innerHTML = `<tr><td colspan="8">${safeText(message)}</td></tr>`;
+  }
+}
+
+async function init() {
+  try {
+    const [data, meta] = await Promise.all([
+      loadJSON("data/live_submissions_scored.json", []),
+      loadJSON("data/live_meta.json", {}),
+    ]);
+
+    state.data = Array.isArray(data) ? data : [];
+    state.filtered = state.data;
+
+    if (!state.data.length) {
+      document.getElementById("scopeLine").textContent = "No data available — refresh the dashboard";
+      document.getElementById("updatedNote").textContent = "Awaiting first refresh";
+      document.getElementById("statStrip").innerHTML = `
+        <div class="stat-card">
+          <span class="stat-value">—</span>
+          <div class="stat-label">No data yet</div>
+          <div class="stat-sublabel">Run the pipeline or refresh Kobo data</div>
+        </div>
+      `;
+      document.querySelector("#projectsTable tbody").innerHTML = "<tr><td colspan='8'>No data available yet</td></tr>";
+      return;
+    }
+
+    populateFilters();
+    renderMeta(meta);
+    wireEvents();
+    render();
+  } catch (error) {
+    console.error("Dashboard initialization failed:", error);
+    showErrorState("The dashboard could not be loaded. Check the data files and refresh again.");
+  }
+}
+
+function populateFilters() {
+  const dataset = state.data;
+  const uniq = (key) => [...new Set(dataset.map((entry) => entry[key]).filter(Boolean))].sort();
+  fill("selRegion", uniq("meta_region").concat(uniq("region")));
+  fill("selCountry", uniq("meta_country").concat(uniq("country")));
+  fillProjectOptions("selProject");
+  fill("selFunding", uniq("meta_funding_source"));
+  fill("selTech", uniq("meta_technical_area"));
+}
+
+function fill(id, values) {
+  const select = document.getElementById(id);
+  [...new Set(values)].filter(Boolean).sort().forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+}
+
+function fillProjectOptions(id) {
+  const select = document.getElementById(id);
+  const projectKeys = [...new Set(state.data.map((entry) => entry.project).filter(Boolean))].sort();
+
+  projectKeys.forEach((projectKey) => {
+    const sample = projectLookupByKey(projectKey) || { project: projectKey };
+    const option = document.createElement("option");
+    option.value = projectKey;
+    option.textContent = displayProjectName(sample);
+    select.appendChild(option);
+  });
+}
+
+function wireEvents() {
+  const map = { selRegion: "region", selCountry: "country", selProject: "project", selFunding: "funding", selTech: "tech", selStage: "stage", selStatus: "status" };
+  Object.entries(map).forEach(([id, key]) => {
+    document.getElementById(id).addEventListener("change", (event) => {
+      state.filters[key] = event.target.value;
+      applyFilters();
+    });
+  });
+
+  document.getElementById("projectSearch").addEventListener("input", (event) => {
+    state.filters.search = event.target.value.trim().toLowerCase();
+    render();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", resetFilters);
+  document.getElementById("btnExportExcel").addEventListener("click", () => exportExcel(state.filtered, state.filters));
+  document.getElementById("btnExportWord").addEventListener("click", () => exportWord(state.filtered, state.filters));
+
+  document.querySelectorAll("#projectsTable th[data-sort]").forEach((header) => {
+    header.addEventListener("click", () => {
+      const key = header.dataset.sort;
+      if (state.sort.key === key) {
+        state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
+      } else {
+        state.sort.key = key;
+        state.sort.dir = "asc";
+      }
+      renderProjectsTable();
+    });
+  });
+}
+
+function resetFilters() {
+  state.filters = { region: "", country: "", project: "", funding: "", tech: "", stage: "", status: "", search: "" };
+  ["selRegion", "selCountry", "selProject", "selFunding", "selTech", "selStage", "selStatus"].forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) element.value = "";
+  });
+  const searchBox = document.getElementById("projectSearch");
+  if (searchBox) searchBox.value = "";
+  applyFilters();
+}
+
+function stageMatches(row, stage) {
+  if (!stage) return true;
+  const key = `${stage}Score`;
+  return row[key] != null;
+}
+
+function applyFilters() {
+  const filters = state.filters;
+  state.filtered = state.data.filter((entry) => {
+    const region = entry.meta_region || entry.region || "";
+    const country = entry.meta_country || entry.country || "";
+    const projectTitle = displayProjectName(entry).toLowerCase();
+    const searchText = filters.search || "";
+    const searchMatch = !searchText || projectTitle.includes(searchText) || country.toLowerCase().includes(searchText);
+
+    return (!filters.region || region === filters.region)
+      && (!filters.country || country === filters.country)
+      && (!filters.project || entry.project === filters.project)
+      && (!filters.funding || entry.meta_funding_source === filters.funding)
+      && (!filters.tech || entry.meta_technical_area === filters.tech)
+      && (!filters.stage || stageMatches(entry, filters.stage))
+      && (!filters.status || entry.ProjectStatus === filters.status)
+      && searchMatch;
+  });
+  render();
+}
+
+function render() {
+  renderScope();
+  renderStats();
+  renderStatusChart();
+  renderCompletionChart();
+  renderPillarGrid();
+  renderRiskTable();
+  renderConcernsTable();
+  renderProjectsTable();
+}
+
+function renderScope() {
+  const count = state.filtered.length;
+  const projects = new Set(state.filtered.map((entry) => entry.project).filter(Boolean)).size;
+  document.getElementById("scopeLine").textContent = `${count} checklist${count === 1 ? "" : "s"} · ${projects} project${projects === 1 ? "" : "s"}`;
+}
+
+function renderMeta(meta) {
+  const updatedNote = document.getElementById("updatedNote");
+  if (!updatedNote) return;
+  updatedNote.textContent = meta && meta.fetched_at ? `Updated ${new Date(meta.fetched_at).toLocaleString()}` : "Awaiting first refresh";
+}
+
+function renderStats() {
+  const data = state.filtered;
+  const scores = data.map((entry) => entry.SubmissionScore).filter((score) => score != null);
+  const average = scores.length ? (scores.reduce((total, value) => total + value, 0) / scores.length).toFixed(1) : "—";
+  const statusCounts = { "On Track": 0, "Needs Attention": 0, "At Risk": 0 };
+  data.forEach((entry) => {
+    if (statusCounts[entry.ProjectStatus] != null) statusCounts[entry.ProjectStatus] += 1;
+  });
+
+  const projects = new Set(data.map((entry) => entry.project).filter(Boolean)).size;
+  const cells = [
+    { num: projects, lbl: "Projects Reporting", sub: "in scope" },
+    { num: data.length, lbl: "Checklists Submitted", sub: "total" },
+    { num: `${average}%`, lbl: "Overall QA Score", sub: "average" },
+    { num: statusCounts["On Track"], lbl: "On Track", sub: "≥ 80%", color: "var(--color-success)" },
+    { num: statusCounts["Needs Attention"], lbl: "Needs Attention", sub: "60–79%", color: "var(--color-warning)" },
+    { num: statusCounts["At Risk"], lbl: "At Risk", sub: "< 60%", color: "var(--color-danger)" },
+  ];
+
+  document.getElementById("statStrip").innerHTML = cells.map((cell) => {
+    const styleClass = cell.color ? (cell.color.includes("success") ? "success" : cell.color.includes("warning") ? "warning" : "danger") : "";
+    return `
+      <div class="stat-card">
+        <span class="stat-value ${styleClass}" style="${cell.color ? `color:${cell.color};` : ""}">${safeText(cell.num)}</span>
+        <div class="stat-label">${safeText(cell.lbl)}</div>
+        <div class="stat-sublabel">${safeText(cell.sub)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderStatusChart() {
+  const counts = { "On Track": 0, "Needs Attention": 0, "At Risk": 0 };
+  state.filtered.forEach((entry) => {
+    if (counts[entry.ProjectStatus] != null) counts[entry.ProjectStatus] += 1;
+  });
+
+  const canvas = document.getElementById("statusChart");
+  if (!canvas) return;
+  if (state.charts.status) state.charts.status.destroy();
+  state.charts.status = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(counts),
+      datasets: [{ data: Object.values(counts), backgroundColor: ["#059669", "#d97706", "#dc2626"] }],
+    },
+    options: { plugins: { legend: { position: "bottom" } }, maintainAspectRatio: false },
+  });
+}
+
+function renderCompletionChart() {
+  const totals = {};
+  state.filtered.forEach((entry) => {
+    const country = entry.meta_country || entry.country;
+    if (!country) return;
+    totals[country] = (totals[country] || 0) + 1;
+  });
+
+  const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  const canvas = document.getElementById("completionChart");
+  if (!canvas) return;
+  if (state.charts.completion) state.charts.completion.destroy();
+  state.charts.completion = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: sorted.map(([key]) => key),
+      datasets: [{ label: "Checklists", data: sorted.map(([, value]) => value), backgroundColor: "#1f5c3d" }],
+    },
+    options: { indexAxis: "y", plugins: { legend: { display: false } }, maintainAspectRatio: false },
+  });
+}
+
+function renderPillarGrid() {
+  const data = state.filtered;
+  const pillars = [{ key: "ProgrammaticScore", label: "Programmatic" }, { key: "MELScore", label: "MEL" }];
+  const stageNames = ["Startup", "Implementation", "Closeout"];
+
+  const stageCells = stageNames.map((stage) => {
+    const scores = data.map((entry) => entry[`${stage}Score`]).filter((value) => value != null);
+    const average = scores.length ? (scores.reduce((total, value) => total + value, 0) / scores.length).toFixed(1) : "—";
+    const numeric = average === "—" ? 0 : Number(average);
+    const color = numeric >= 80 ? "var(--color-success)" : numeric >= 60 ? "var(--color-warning)" : "var(--color-danger)";
+    return `
+      <div class="pillar-cell">
+        <div class="pillar-label">${safeText(stage)} Stage</div>
+        <div class="pillar-value" style="color:${color}">${safeText(average)}${average === "—" ? "" : "%"}</div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100, numeric)}%; background:${color};"></div></div>
+        <div class="pillar-foot">${safeText(scores.length)} submission${scores.length === 1 ? "" : "s"} scored</div>
+      </div>
+    `;
+  }).join("");
+
+  const pillarCells = pillars.map((pillar) => {
+    const scores = data.map((entry) => entry[pillar.key]).filter((value) => value != null);
+    const average = scores.length ? (scores.reduce((total, value) => total + value, 0) / scores.length).toFixed(1) : "—";
+    const numeric = average === "—" ? 0 : Number(average);
+    const color = numeric >= 80 ? "var(--color-success)" : numeric >= 60 ? "var(--color-warning)" : "var(--color-danger)";
+    return `
+      <div class="pillar-cell">
+        <div class="pillar-label">${safeText(pillar.label)} Pillar</div>
+        <div class="pillar-value" style="color:${color}">${safeText(average)}${average === "—" ? "" : "%"}</div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100, numeric)}%; background:${color};"></div></div>
+        <div class="pillar-foot">${safeText(scores.length)} submission${scores.length === 1 ? "" : "s"} scored</div>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("pillarGrid").innerHTML = pillarCells + stageCells;
+}
+
+function renderRiskTable() {
+  const atRisk = state.filtered.filter((entry) => entry.ProjectStatus === "At Risk").slice(0, 5);
+  const tbody = document.querySelector("#riskTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = atRisk.length
+    ? atRisk.map((entry) => `
+        <tr>
+          <td>${safeText(entry.meta_country || entry.country || "—")}</td>
+          <td>${safeText(displayProjectName(entry))}</td>
+          <td class="tabular">${safeText(entry.SubmissionScore ?? "—")}%</td>
+          <td><span class="badge ${(entry.ProjectStatus || "").toLowerCase().replace(/\s+/g, "-")}">${safeText(entry.ProjectStatus || "—")}</span></td>
+        </tr>
+      `).join("")
+    : "<tr><td colspan='4'>No projects at risk 🎉</td></tr>";
+}
+
+function renderConcernsTable() {
+  const counts = {};
+  state.filtered.forEach((entry) => {
+    (entry.ConcernQuestions || []).forEach((concern) => {
+      const key = concern.issue || concern.question;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+  });
+  const sorted = Object.entries(counts).sort(([, left], [, right]) => right - left).slice(0, 5);
+  const tbody = document.querySelector("#concernsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = sorted.length
+    ? sorted.map(([issue, count]) => `<tr><td>${safeText(issue)}</td><td class="tabular">${safeText(count)}</td></tr>`).join("")
+    : "<tr><td colspan='2'>No concerns in scope</td></tr>";
+}
+
+function renderProjectsTable() {
+  let rows = state.filtered.slice();
+  const query = state.filters.search;
+  if (query) {
+    rows = rows.filter((entry) => {
+      const projectName = displayProjectName(entry).toLowerCase();
+      const country = (entry.meta_country || entry.country || "").toLowerCase();
+      return projectName.includes(query) || country.includes(query);
+    });
+  }
+
+  const direction = state.sort.dir === "asc" ? 1 : -1;
+  const currentSort = state.sort.key;
+  const accessor = {
+    country: (entry) => entry.meta_country || entry.country || "",
+    project: (entry) => displayProjectName(entry),
+    funding: (entry) => entry.meta_funding_source || "",
+    amount: (entry) => Number(entry.meta_amount) || 0,
+    score: (entry) => Number(entry.SubmissionScore) || 0,
+    status: (entry) => entry.ProjectStatus || "",
+    concerns: (entry) => Number(entry.ConcernCount) || 0,
+    risk: (entry) => Number(entry.RiskScore) || 0,
+  }[currentSort] || ((entry) => Number(entry.SubmissionScore) || 0);
+
+  rows.sort((left, right) => {
+    const leftValue = accessor(left);
+    const rightValue = accessor(right);
+    if (leftValue < rightValue) return -1 * direction;
+    if (leftValue > rightValue) return 1 * direction;
+    return 0;
+  });
+
+  const tbody = document.querySelector("#projectsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = rows.length
+    ? rows.map((entry) => {
+        const statusClass = (entry.ProjectStatus || "").toLowerCase().replace(/\s+/g, "-");
+        const riskClass = (entry.RiskCategory || "").toLowerCase();
+        return `
+          <tr data-project="${safeText(entry.project || "")}">
+            <td>${safeText(entry.meta_country || entry.country || "—")}</td>
+            <td><b>${safeText(displayProjectName(entry))}</b></td>
+            <td>${safeText(entry.meta_funding_source || "—")}</td>
+            <td class="tabular">${safeText(formatAmount(entry.meta_amount))}</td>
+            <td class="tabular">${safeText(entry.SubmissionScore ?? "—")}%</td>
+            <td><span class="badge ${statusClass}">${safeText(entry.ProjectStatus || "—")}</span></td>
+            <td class="tabular">${safeText(entry.ConcernCount ?? 0)}</td>
+            <td><span class="badge ${riskClass}">${safeText(entry.RiskCategory || "—")}</span></td>
+          </tr>
+        `;
+      }).join("")
+    : "<tr><td colspan='8'>No projects match your filter</td></tr>";
+
+  document.querySelectorAll("#projectsTable tbody tr[data-project]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const projectId = row.dataset.project;
+      if (projectId) window.location.href = `project.html?project=${encodeURIComponent(projectId)}`;
+    });
+  });
+}
+
+function formatAmount(value) {
+  if (value == null || value === "") return "—";
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return "—";
+  if (parsed >= 1_000_000) return `$${(parsed / 1_000_000).toFixed(1)}M`;
+  if (parsed >= 1_000) return `$${(parsed / 1_000).toFixed(0)}K`;
+  return `$${parsed}`;
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+
