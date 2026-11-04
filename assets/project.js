@@ -4,6 +4,15 @@
 
 const state = { data: [], project: "", filtered: [], charts: {} };
 
+function displayProjectName(row) {
+  if (!row) return "Unknown project";
+  return row._display_project_name || row.meta_project_title || row.project_title || row.project || "Unknown project";
+}
+
+function projectLookupByKey(projectKey) {
+  return state.data.find((entry) => entry.project === projectKey) || null;
+}
+
 async function loadJSON(path, fallback) {
   try {
     const r = await fetch(path, { cache: "no-store" });
@@ -23,12 +32,16 @@ function submissionTimestamp(d) {
 async function init() {
   const data = await loadJSON("data/live_submissions_scored.json", []);
   state.data = Array.isArray(data) ? data : [];
-  const projects = [...new Set(state.data.map(d => d.project).filter(Boolean))].sort();
+
+  const projects = [...new Set(state.data.map((d) => d.project).filter(Boolean))].sort();
   const sel = document.getElementById("selProject");
-  projects.forEach(p => {
+  if (!sel) return;
+
+  projects.forEach((project) => {
+    const sample = projectLookupByKey(project) || { project };
     const o = document.createElement("option");
-    o.value = p;
-    o.textContent = p;
+    o.value = project;
+    o.textContent = displayProjectName(sample);
     sel.appendChild(o);
   });
 
@@ -40,9 +53,11 @@ async function init() {
   } else {
     state.project = "";
   }
+
   render();
-  sel.addEventListener("change", e => {
-    state.project = e.target.value;
+
+  sel.addEventListener("change", (event) => {
+    state.project = event.target.value;
     const url = new URL(window.location);
     if (state.project) {
       url.searchParams.set("project", state.project);
@@ -55,8 +70,22 @@ async function init() {
 }
 
 function render() {
+  if (!state.project) {
+    const title = document.getElementById("projectTitle");
+    if (title) title.textContent = "Project Diagnostics";
+    const meta = document.getElementById("projectMeta");
+    if (meta) meta.textContent = "No project selected";
+    const strip = document.getElementById("statStrip");
+    if (strip) {
+      strip.innerHTML = "<div class=\"stat-cell\"><span class=\"num\">—</span><div class=\"lbl\">No project selected</div></div>";
+    }
+    const logBody = document.getElementById("logBody");
+    if (logBody) logBody.innerHTML = "<tr><td colspan='6'>No submissions yet</td></tr>";
+    return;
+  }
+
   state.filtered = state.data
-    .filter(d => d.project === state.project)
+    .filter((d) => d.project === state.project)
     .sort((a, b) => submissionTimestamp(a) - submissionTimestamp(b));
 
   renderHeader();
@@ -69,20 +98,24 @@ function render() {
 }
 
 function renderHeader() {
-  document.getElementById("projectTitle").textContent = state.project || "Project";
+  const title = document.getElementById("projectTitle");
+  if (title) title.textContent = state.project || "Project";
+
   const s = state.filtered[0] || {};
   const parts = [];
   if (s.meta_project_title) parts.push(s.meta_project_title);
   if (s.meta_country) parts.push(s.meta_country);
   if (s.meta_funding_source) parts.push(s.meta_funding_source);
   if (s.meta_project_lead) parts.push("Lead: " + s.meta_project_lead);
-  document.getElementById("projectMeta").textContent = parts.join(" · ");
+
+  const meta = document.getElementById("projectMeta");
+  if (meta) meta.textContent = parts.join(" · ") || "Project details unavailable";
 }
 
 function renderStats() {
   const d = state.filtered;
   const latest = d[d.length - 1] || {};
-  const scores = d.map(x => x.SubmissionScore).filter(s => s != null);
+  const scores = d.map((x) => x.SubmissionScore).filter((s) => s != null);
   const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
   const cells = [
     { num: d.length, lbl: "Checklists Submitted" },
@@ -92,9 +125,13 @@ function renderStats() {
     { num: latest.RiskCategory || "—", lbl: "Risk Category" },
     { num: latest.ProjectStatus || "—", lbl: "Status", color: statusColor(latest.ProjectStatus) },
   ];
-  document.getElementById("statStrip").innerHTML = cells.map(c =>
-    `<div class="stat-cell"><span class="num" ${c.color ? `style="color:${c.color}"` : ""}>${c.num}</span><div class="lbl">${c.lbl}</div></div>`
-  ).join("");
+
+  const strip = document.getElementById("statStrip");
+  if (strip) {
+    strip.innerHTML = cells.map((c) =>
+      `<div class="stat-cell"><span class="num" ${c.color ? `style="color:${c.color}"` : ""}>${c.num}</span><div class="lbl">${c.lbl}</div></div>`
+    ).join("");
+  }
 }
 
 function statusColor(s) {
@@ -106,13 +143,16 @@ function statusColor(s) {
 
 function renderPillarChart() {
   const d = state.filtered;
-  const prog = d.map(x => x.ProgrammaticScore).filter(v => v != null);
-  const mel = d.map(x => x.MELScore).filter(v => v != null);
-  const avg = arr => arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : 0;
+  const prog = d.map((x) => x.ProgrammaticScore).filter((v) => v != null);
+  const mel = d.map((x) => x.MELScore).filter((v) => v != null);
+  const avg = (arr) => (arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : 0);
 
   if (state.charts.pillar) state.charts.pillar.destroy();
 
-  state.charts.pillar = new Chart(document.getElementById("pillarChart"), {
+  const chartTarget = document.getElementById("pillarChart");
+  if (!chartTarget) return;
+
+  state.charts.pillar = new Chart(chartTarget, {
     type: "bar",
     data: {
       labels: ["Programmatic", "MEL"],
@@ -134,14 +174,17 @@ function renderPillarChart() {
 function renderStageChart() {
   const d = state.filtered;
   const stages = ["Startup", "Implementation", "Closeout"];
-  const values = stages.map(s => {
-    const arr = d.map(x => x[`${s}Score`]).filter(v => v != null);
+  const values = stages.map((s) => {
+    const arr = d.map((x) => x[`${s}Score`]).filter((v) => v != null);
     return arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : 0;
   });
 
   if (state.charts.stage) state.charts.stage.destroy();
 
-  state.charts.stage = new Chart(document.getElementById("stageChart"), {
+  const chartTarget = document.getElementById("stageChart");
+  if (!chartTarget) return;
+
+  state.charts.stage = new Chart(chartTarget, {
     type: "bar",
     data: {
       labels: stages,
@@ -182,33 +225,40 @@ function renderPerformanceLog() {
     </tr>`;
   }).join("");
 
-  document.getElementById("logBody").innerHTML = body || "<tr><td colspan='6'>No submissions yet</td></tr>";
+  const logBody = document.getElementById("logBody");
+  if (logBody) logBody.innerHTML = body || "<tr><td colspan='6'>No submissions yet</td></tr>";
 }
 
 function renderConcerns() {
   const latest = state.filtered[state.filtered.length - 1] || {};
   const concerns = latest.ConcernQuestions || [];
-  document.querySelector("#concernsTable tbody").innerHTML = concerns.length
-    ? concerns.map(c => `<tr><td>${c.stage || "—"}</td><td>${c.pillar || "—"}</td><td>${c.issue || c.question}</td></tr>`).join("")
+  const tableBody = document.querySelector("#concernsTable tbody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = concerns.length
+    ? concerns.map((c) => `<tr><td>${c.stage || "—"}</td><td>${c.pillar || "—"}</td><td>${c.issue || c.question}</td></tr>`).join("")
     : "<tr><td colspan='3'>No concerns flagged in the latest submission</td></tr>";
 }
 
 function renderResponses() {
   const latest = state.filtered[state.filtered.length - 1] || {};
   const rows = [];
-  Object.keys(latest).forEach(k => {
+  Object.keys(latest).forEach((k) => {
     if (!k.endsWith("_AnswerC")) return;
     const q = k.replace("_AnswerC", "");
     rows.push({ question: q, answer: latest[q], score: latest[k], concern: latest[`${q}_IsConcern`] });
   });
 
-  const search = document.getElementById("responseSearch").value.toLowerCase();
-  const filtered = search ? rows.filter(r => r.question.toLowerCase().includes(search)) : rows;
+  const search = (document.getElementById("responseSearch")?.value || "").toLowerCase();
+  const filtered = search ? rows.filter((r) => r.question.toLowerCase().includes(search)) : rows;
 
-  document.querySelector("#responsesTable tbody").innerHTML = filtered.length
-    ? filtered.map(r => {
+  const tableBody = document.querySelector("#responsesTable tbody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = filtered.length
+    ? filtered.map((r) => {
         const cls = r.score == null ? "amber" : r.score === 1 ? "green" : "red";
-        return `<tr><td>${r.question}</td><td>${r.answer ?? "—"}</td><td><span class="badge ${cls}">${r.score ?? "—"}</span></td><td>${r.concern ? '<span class="badge red">Concern</span>' : "<span class=\"badge green\">OK</span>"}</td></tr>`;
+        return `<tr><td>${r.question}</td><td>${r.answer ?? "—"}</td><td><span class="badge ${cls}">${r.score ?? "—"}</span></td><td>${r.concern ? '<span class="badge red">Concern</span>' : "—"}</td></tr>`;
       }).join("")
     : "<tr><td colspan='4'>No responses</td></tr>";
 }
