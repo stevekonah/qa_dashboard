@@ -43,6 +43,62 @@ NON_QUESTION_FIELDS = {
     "project_title", "serenic_code"
 }
 
+# Question sets used in the scoring logic.
+# Reverse questions are scored in the opposite direction to the native yes/no answer.
+REVERSE_QUESTIONS = {
+    "S.m.8",
+    "S.p.7",
+    "S.f.2",
+    "I.m.4.3",
+    "I.m.6.4",
+    "I.m.9",
+    "I.p.3.2",
+    "I.p.7",
+    "I.p.8",
+    "I.f.2",
+    "I.f.5.1",
+    "I.f.7",
+    "c.m.6",
+    "c.m.9",
+    "c.p.8",
+    "c.p.9",
+    "c.f.2",
+    "c.f.9",
+}
+
+# Neutral questions do not contribute to the score total.
+NEUTRAL_QUESTIONS = {
+    "S.m.2.4",
+    "S.m.3",
+    "S.m.6",
+    "S.m.7",
+    "S.m.8.1",
+    "S.p.1",
+    "S.p.6",
+    "S.p.6.4",
+    "S.p.7.1",
+    "S.f.2.1",
+    "I.m.1.3",
+    "I.m.3",
+    "I.m.7",
+    "I.m.9.1",
+    "I.p.1.2",
+    "I.p.2",
+    "I.p.5",
+    "I.p.7.1",
+    "I.p.8.1",
+    "I.f.6",
+    "I.f.7.1",
+    "c.m.2",
+    "c.m.7",
+    "c.m.9.1",
+    "c.p.1.1",
+    "c.p.8.1",
+    "c.p.9.1",
+    "c.f.8",
+    "c.f.9.1",
+}
+
 # --- Scoring thresholds ---
 ON_TRACK_THRESHOLD = 80
 NEEDS_ATTENTION_THRESHOLD = 60
