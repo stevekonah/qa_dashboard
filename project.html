@@ -1,95 +1,144 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project Diagnostics · QA Dashboard</title>
-<link rel="stylesheet" href="assets/style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pathfinder QA Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<div class="app">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">Q</div>
-      <div class="brand-text">
-        <h1>QA Dashboard</h1>
-        <p>Project Diagnostics</p>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">Q</div>
+        <div class="brand-text">
+          <h1>QA Dashboard</h1>
+          <p>Quality Assurance</p>
+        </div>
       </div>
-    </div>
-    <div class="side-block">
-      <p class="side-label">Select project</p>
-      <select class="filter-select" id="selProject"><option value="">— Choose —</option></select>
-    </div>
-    <div class="side-block">
-      <p class="side-label">Navigate</p>
-      <a class="side-link" href="index.html">← Executive overview</a>
-      <a class="side-link" href="help.html">Help &amp; glossary →</a>
-    </div>
-  </aside>
 
-  <main class="main">
-    <div class="topbar">
-      <div>
-        <h2 id="projectTitle">Project Diagnostics</h2>
-        <p class="scope-line" id="projectMeta">—</p>
+      <div class="side-block">
+        <p class="side-label">Filters</p>
+        <div class="filter-grid">
+          <select class="filter-select" id="selRegion"><option value="">All regions</option></select>
+          <select class="filter-select" id="selCountry"><option value="">All countries</option></select>
+          <select class="filter-select" id="selProject"><option value="">All projects</option></select>
+          <select class="filter-select" id="selFunding"><option value="">All funders</option></select>
+          <select class="filter-select" id="selTech"><option value="">All technical areas</option></select>
+          <select class="filter-select" id="selYear"><option value="">All years</option></select>
+          <select class="filter-select" id="selQuarter"><option value="">All quarters</option></select>
+          <select class="filter-select" id="selStage">
+            <option value="">All stages</option>
+            <option value="Startup">Startup</option>
+            <option value="Implementation">Implementation</option>
+            <option value="Closeout">Closeout</option>
+          </select>
+          <select class="filter-select" id="selStatus">
+            <option value="">All statuses</option>
+            <option value="On Track">On Track</option>
+            <option value="Needs Attention">Needs Attention</option>
+            <option value="At Risk">At Risk</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btnReset">Reset filters</button>
       </div>
-      <div class="topbar-actions">
-        <a class="btn ghost" href="index.html">Back</a>
+
+      <div class="side-block">
+        <p class="side-label">Navigate</p>
+        <a class="side-link" href="index.html">Overview</a>
+        <a class="side-link" href="project.html">Project diagnostics</a>
+        <a class="side-link" href="help.html">Help &amp; glossary</a>
       </div>
-    </div>
 
-    <section class="stat-strip" id="statStrip"></section>
-
-    <section class="grid-2">
-      <div class="card">
-        <h3>Pillar Breakdown</h3>
-        <canvas id="pillarChart"></canvas>
+      <div class="side-source">
+        Source: KoboToolbox · <span id="updatedNote">—</span>
       </div>
-      <div class="card">
-        <h3>Stage Breakdown</h3>
-        <canvas id="stageChart"></canvas>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-switcher" aria-label="Dashboard sections">
+            <a class="nav-pill active" href="index.html">Overview</a>
+            <a class="nav-pill" href="project.html">Projects</a>
+            <a class="nav-pill" href="help.html">Help</a>
+          </div>
+          <h2>Executive Overview</h2>
+          <p class="scope-line" id="scopeLine">Loading…</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="btnExportExcel">Export Excel</button>
+          <button class="btn btn-ghost" id="btnExportWord">Export Word</button>
+        </div>
       </div>
-    </section>
 
-    <section class="card">
-      <h3>Performance Log</h3>
-      <div class="register-wrap">
-        <table class="register">
-          <thead>
-            <tr><th>Submission date</th><th>Score</th><th>Status</th><th>Concerns</th><th>Risk</th><th>Score Progress</th></tr>
-          </thead>
-          <tbody id="logBody"></tbody>
-        </table>
-      </div>
-    </section>
+      <section class="stat-strip" id="statStrip"></section>
 
-    <section class="card">
-      <h3>Concerns Flagged</h3>
-      <p class="card-note">Negative answers to questions flagged as concerns, sorted by stage and pillar.</p>
-      <table id="concernsTable">
-        <thead><tr><th>Stage</th><th>Pillar</th><th>Issue</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
+      <section class="grid-2">
+        <div class="card">
+          <h3>Projects by status</h3>
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="card">
+          <h3>Checklists by country</h3>
+          <canvas id="completionChart"></canvas>
+        </div>
+      </section>
 
-    <section class="card">
-      <h3>All Checklist Responses</h3>
-      <input type="text" id="responseSearch" placeholder="Search question…" class="register-search">
-      <div class="register-wrap">
-        <table id="responsesTable" class="register">
-          <thead>
-            <tr><th>Question</th><th>Answer</th><th>Score</th><th>Concern</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+      <section class="card">
+        <h3>Pillar performance</h3>
+        <p class="card-note">Average score per pillar across the current filtered scope.</p>
+        <div class="pillar-grid" id="pillarGrid"></div>
+      </section>
 
-  </main>
-</div>
+      <section class="grid-2">
+        <div class="card">
+          <h3>Projects at risk</h3>
+          <table id="riskTable">
+            <thead><tr><th>Country</th><th>Project</th><th>Score</th><th>Risk</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Top 5 concerns</h3>
+          <table id="concernsTable">
+            <thead><tr><th>Issue</th><th>Frequency</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
 
-<script src="assets/project.js"></script>
+      <section class="card">
+        <h3>All projects</h3>
+        <input type="text" id="projectSearch" placeholder="Search project or country…" class="register-search">
+        <div class="register-wrap">
+          <table id="projectsTable" class="register">
+            <thead>
+              <tr>
+                <th data-sort="country">Country</th>
+                <th data-sort="project">Project</th>
+                <th data-sort="funding">Funder</th>
+                <th data-sort="amount">Amount</th>
+                <th data-sort="score">Score</th>
+                <th data-sort="status">Status</th>
+                <th data-sort="concerns">Concerns</th>
+                <th data-sort="risk">Risk</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span>Pathfinder International · Quality Assurance</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/exporters.js"></script>
+  <script src="assets/app.js"></script>
 </body>
 </html>

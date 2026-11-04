@@ -1,321 +1,82 @@
-/* ============================================================
-   QA Dashboard — Executive Overview
-   ============================================================ */
-
-const state = {
-  data: [], filtered: [],
-  filters: { region:"", country:"", project:"", funding:"", tech:"", stage:"", status:"", search:"" },
-  sort: { key:"score", dir:"asc" },
-  charts: {},
-};
-
-function displayProjectName(row) {
-  if (!row) return "Unknown project";
-  return row._display_project_name || row.meta_project_title || row.project || "Unknown project";
-}
-
-function projectLookupByKey(projectKey) {
-  return state.data.find(d => d.project === projectKey) || null;
-}
-
-async function loadJSON(path, fallback) {
-  try { const r = await fetch(path, {cache:"no-store"}); return r.ok ? await r.json() : fallback; }
-  catch { return fallback; }
-}
-
-async function init() {
-  const [data, meta] = await Promise.all([
-    loadJSON("data/live_submissions_scored.json", []),
-    loadJSON("data/live_meta.json", {}),
-  ]);
-
-  state.data = Array.isArray(data) ? data : [];
-  state.filtered = state.data;
-
-  if (!state.data.length) {
-    document.getElementById("scopeLine").textContent = "No data available — refresh the dashboard";
-    document.getElementById("updatedNote").textContent = "Awaiting first refresh";
-    document.getElementById("statStrip").innerHTML = `
-      <div class="stat-card">
-        <span class="stat-value">—</span>
-        <div class="stat-label">No data yet</div>
-        <div class="stat-sublabel">Run the pipeline or refresh Kobo data</div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help · QA Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">Q</div>
+        <div class="brand-text">
+          <h1>QA Dashboard</h1>
+          <p>Help &amp; glossary</p>
+        </div>
       </div>
-    `;
-    document.querySelector("#projectsTable tbody").innerHTML = "<tr><td colspan='8'>No data available yet</td></tr>";
-    return;
-  }
+      <div class="side-block">
+        <p class="side-label">Navigate</p>
+        <a class="side-link" href="index.html">Overview</a>
+        <a class="side-link" href="project.html">Project diagnostics</a>
+        <a class="side-link" href="help.html">Help &amp; glossary</a>
+      </div>
+    </aside>
 
-  populateFilters();
-  renderMeta(meta);
-  wireEvents();
-  render();
-}
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-switcher" aria-label="Dashboard sections">
+            <a class="nav-pill" href="index.html">Overview</a>
+            <a class="nav-pill" href="project.html">Projects</a>
+            <a class="nav-pill active" href="help.html">Help</a>
+          </div>
+          <h2>Help &amp; glossary</h2>
+        </div>
+      </div>
 
-function populateFilters() {
-  const d = state.data;
-  const uniq = key => [...new Set(d.map(x => x[key]).filter(Boolean))].sort();
-  fill("selRegion", uniq("meta_region").concat(uniq("region")));
-  fill("selCountry", uniq("meta_country").concat(uniq("country")));
-  fillProjectOptions("selProject");
-  fill("selFunding", uniq("meta_funding_source"));
-  fill("selTech", uniq("meta_technical_area"));
-}
+      <section class="card">
+        <h3>Overview</h3>
+        <p>The QA dashboard tracks project quality across active Pathfinder initiatives using a standard checklist submitted through KoboToolbox. It highlights progress, performance, and risks across regions, countries, and projects.</p>
+      </section>
 
-function fill(id, values) {
-  const sel = document.getElementById(id);
-  [...new Set(values)].filter(Boolean).sort().forEach(v => {
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v;
-    sel.appendChild(o);
-  });
-}
+      <section class="card">
+        <h3>Key metrics</h3>
+        <table>
+          <thead><tr><th>Metric</th><th>Definition</th></tr></thead>
+          <tbody>
+            <tr><td>Overall QA score</td><td>Average of all scored answers across the filtered scope.</td></tr>
+            <tr><td>Submission score</td><td>Percentage of compliant answers in one checklist.</td></tr>
+            <tr><td>On Track</td><td>Latest score of 80% or higher.</td></tr>
+            <tr><td>Needs Attention</td><td>Latest score from 60% to 79%.</td></tr>
+            <tr><td>At Risk</td><td>Latest score below 60%.</td></tr>
+            <tr><td>Concern</td><td>Negative answer to a question flagged as a concern.</td></tr>
+            <tr><td>Risk score</td><td>(Concerns × 2) + ((1 − Score) × 10)</td></tr>
+            <tr><td>Programmatic score</td><td>Average of Programmatic-pillar answers.</td></tr>
+            <tr><td>MEL score</td><td>Average of MEL-pillar answers.</td></tr>
+            <tr><td>Startup / Implementation / Closeout</td><td>Average of questions in that project stage.</td></tr>
+          </tbody>
+        </table>
+      </section>
 
-function fillProjectOptions(id) {
-  const sel = document.getElementById(id);
-  const projectKeys = [...new Set(state.data.map(x => x.project).filter(Boolean))].sort();
+      <section class="card">
+        <h3>Scoring methodology</h3>
+        <ul>
+          <li>Each scored question is counted as 1 (compliant) or 0 (non-compliant).</li>
+          <li>Reverse-scored questions are flipped before the score is calculated.</li>
+          <li>Neutral questions are excluded from the score denominator.</li>
+          <li>Questions with no score value are ignored.</li>
+        </ul>
+      </section>
 
-  projectKeys.forEach(projectKey => {
-    const sample = projectLookupByKey(projectKey) || { project: projectKey };
-    const o = document.createElement("option");
-    o.value = projectKey;
-    o.textContent = displayProjectName(sample);
-    sel.appendChild(o);
-  });
-}
-
-function wireEvents() {
-  const map = { selRegion:"region", selCountry:"country", selProject:"project", selFunding:"funding", selTech:"tech", selStage:"stage", selStatus:"status" };
-  Object.entries(map).forEach(([id, key]) => {
-    document.getElementById(id).addEventListener("change", e => { state.filters[key] = e.target.value; applyFilters(); });
-  });
-  document.getElementById("projectSearch").addEventListener("input", e => {
-    state.filters.search = e.target.value.toLowerCase(); render();
-  });
-  document.getElementById("btnReset").addEventListener("click", resetFilters);
-  document.getElementById("btnExportExcel").addEventListener("click", () => exportExcel(state.filtered, state.filters));
-  document.getElementById("btnExportWord").addEventListener("click", () => exportWord(state.filtered, state.filters));
-  document.querySelectorAll("#projectsTable th[data-sort]").forEach(th => {
-    th.addEventListener("click", () => {
-      const key = th.dataset.sort;
-      if (state.sort.key === key) state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
-      else { state.sort.key = key; state.sort.dir = "asc"; }
-      renderProjectsTable();
-    });
-  });
-}
-
-function resetFilters() {
-  state.filters = { region:"", country:"", project:"", funding:"", tech:"", stage:"", status:"", search:"" };
-  ["selRegion","selCountry","selProject","selFunding","selTech","selStage","selStatus"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("projectSearch").value = "";
-  applyFilters();
-}
-
-function stageMatches(row, stage) {
-  if (!stage) return true;
-  const key = `${stage}Score`;
-  return row[key] != null;
-}
-
-function applyFilters() {
-  const f = state.filters;
-  state.filtered = state.data.filter(d => {
-    const region = d.meta_region || d.region || "";
-    const country = d.meta_country || d.country || "";
-    const projectTitle = displayProjectName(d).toLowerCase();
-    const searchMatch = !f.search || projectTitle.includes(f.search) || (d.meta_country || d.country || "").toLowerCase().includes(f.search);
-
-    return (!f.region || region === f.region)
-      && (!f.country || country === f.country)
-      && (!f.project || d.project === f.project)
-      && (!f.funding || d.meta_funding_source === f.funding)
-      && (!f.tech || d.meta_technical_area === f.tech)
-      && (!f.stage || stageMatches(d, f.stage))
-      && (!f.status || d.ProjectStatus === f.status)
-      && searchMatch;
-  });
-  render();
-}
-
-function render() {
-  renderScope();
-  renderStats();
-  renderStatusChart();
-  renderCompletionChart();
-  renderPillarGrid();
-  renderRiskTable();
-  renderConcernsTable();
-  renderProjectsTable();
-}
-
-function renderScope() {
-  const n = state.filtered.length;
-  const projects = new Set(state.filtered.map(d => d.project).filter(Boolean)).size;
-  document.getElementById("scopeLine").textContent = `${n} checklist${n===1?"":"s"} · ${projects} project${projects===1?"":"s"}`;
-}
-
-function renderMeta(meta) {
-  document.getElementById("updatedNote").textContent = meta.fetched_at ? "Updated " + new Date(meta.fetched_at).toLocaleString() : "Awaiting first refresh";
-}
-
-function renderStats() {
-  const d = state.filtered;
-  const scores = d.map(x => x.SubmissionScore).filter(s => s != null);
-  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-  const statuses = { "On Track":0, "Needs Attention":0, "At Risk":0 };
-  d.forEach(x => { if (statuses[x.ProjectStatus] != null) statuses[x.ProjectStatus]++; });
-  const projects = new Set(d.map(x => x.project).filter(Boolean)).size;
-  const cells = [
-    { num: projects, lbl: "Projects Reporting", sub: "in scope" },
-    { num: d.length, lbl: "Checklists Submitted", sub: "total" },
-    { num: avg + "%", lbl: "Overall QA Score", sub: "average" },
-    { num: statuses["On Track"], lbl: "On Track", sub: "≥ 80%", color:"var(--color-success)" },
-    { num: statuses["Needs Attention"], lbl: "Needs Attention", sub: "60–79%", color:"var(--color-warning)" },
-    { num: statuses["At Risk"], lbl: "At Risk", sub: "< 60%", color:"var(--color-danger)" },
-  ];
-  document.getElementById("statStrip").innerHTML = cells.map(c =>
-    `<div class="stat-card"><span class="stat-value ${c.color ? (c.color.includes('success') ? 'success' : c.color.includes('warning') ? 'warning' : 'danger') : ''}" style="${c.color ? `color:${c.color}` : ''}">${c.num}</span><div class="stat-label">${c.lbl}</div><div class="stat-sublabel">${c.sub}</div></div>`
-  ).join("");
-}
-
-function renderStatusChart() {
-  const counts = { "On Track":0, "Needs Attention":0, "At Risk":0 };
-  state.filtered.forEach(d => { if (counts[d.ProjectStatus] != null) counts[d.ProjectStatus]++; });
-  const ctx = document.getElementById("statusChart");
-  if (state.charts.status) state.charts.status.destroy();
-  state.charts.status = new Chart(ctx, {
-    type: "doughnut",
-    data: { labels: Object.keys(counts), datasets:[{ data: Object.values(counts), backgroundColor:["#059669", "#d97706", "#dc2626"] }] },
-    options: { plugins:{ legend:{ position:"bottom" } }, maintainAspectRatio:false },
-  });
-}
-
-function renderCompletionChart() {
-  const byCountry = {};
-  state.filtered.forEach(d => {
-    const c = d.meta_country || d.country; if (!c) return;
-    byCountry[c] = (byCountry[c] || 0) + 1;
-  });
-  const sorted = Object.entries(byCountry).sort((a,b)=>b[1]-a[1]);
-  const ctx = document.getElementById("completionChart");
-  if (state.charts.completion) state.charts.completion.destroy();
-  state.charts.completion = new Chart(ctx, {
-    type: "bar",
-    data: { labels: sorted.map(x=>x[0]), datasets:[{ label:"Checklists", data: sorted.map(x=>x[1]), backgroundColor:"#1f5c3d" }] },
-    options: { indexAxis:"y", plugins:{ legend:{ display:false } }, maintainAspectRatio:false },
-  });
-}
-
-function renderPillarGrid() {
-  const d = state.filtered;
-  const pillars = [
-    { key:"ProgrammaticScore", label:"Programmatic", color:"#1f5c3d" },
-    { key:"MELScore", label:"MEL", color:"#0284c7" },
-    { key:null, label:"Stages", custom:true },
-  ];
-  document.getElementById("pillarGrid").innerHTML = pillars.map(p => {
-    if (p.custom) {
-      const stages = ["Startup","Implementation","Closeout"];
-      return stages.map(s => {
-        const key = `${s}Score`;
-        const scores = d.map(x => x[key]).filter(v => v != null);
-        const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-        const pct = avg === "—" ? 0 : Number(avg);
-        const color = pct>=80?"var(--color-success)":pct>=60?"var(--color-warning)":"var(--color-danger)";
-        return `<div class="pillar-cell">
-          <div class="pillar-label">${s} Stage</div>
-          <div class="pillar-value" style="color:${color}">${avg}${avg==="—"?"":"%"}</div>
-          <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100,pct)}%; background:${color};"></div></div>
-          <div class="pillar-foot">${scores.length} submission${scores.length===1?"":"s"} scored</div>
-        </div>`;
-      }).join("");
-    }
-    const scores = d.map(x => x[p.key]).filter(v => v != null);
-    const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-    const pct = avg === "—" ? 0 : Number(avg);
-    const color = pct>=80?"var(--color-success)":pct>=60?"var(--color-warning)":"var(--color-danger)";
-    return `<div class="pillar-cell">
-      <div class="pillar-label">${p.label} Pillar</div>
-      <div class="pillar-value" style="color:${color}">${avg}${avg==="—"?"":"%"}</div>
-      <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100,pct)}%; background:${color};"></div></div>
-      <div class="pillar-foot">${scores.length} submission${scores.length===1?"":"s"} scored</div>
-    </div>`;
-  }).join("");
-}
-
-function renderRiskTable() {
-  const atRisk = state.filtered.filter(d => d.ProjectStatus === "At Risk").slice(0, 5);
-  document.querySelector("#riskTable tbody").innerHTML = atRisk.length
-    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${displayProjectName(d)}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${((d.RiskCategory || "").toLowerCase()) || "low"}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
-    : "<tr><td colspan='4'>No projects at risk 🎉</td></tr>";
-}
-
-function renderConcernsTable() {
-  const counts = {};
-  state.filtered.forEach(d => {
-    (d.ConcernQuestions || []).forEach(c => {
-      const key = c.issue || c.question;
-      counts[key] = (counts[key] || 0) + 1;
-    });
-  });
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.querySelector("#concernsTable tbody").innerHTML = sorted.length
-    ? sorted.map(([issue,n]) => `<tr><td>${issue}</td><td class="tabular">${n}</td></tr>`).join("")
-    : "<tr><td colspan='2'>No concerns in scope</td></tr>";
-}
-
-function renderProjectsTable() {
-  let rows = state.filtered.slice();
-  const q = state.filters.search;
-  if (q) rows = rows.filter(d => displayProjectName(d).toLowerCase().includes(q) || (d.meta_country||d.country||"").toLowerCase().includes(q));
-  const dir = state.sort.dir === "asc" ? 1 : -1;
-  const key = state.sort.key;
-  const accessor = {
-    country: d => d.meta_country || d.country || "",
-    project: d => displayProjectName(d),
-    funding: d => d.meta_funding_source || "",
-    amount: d => Number(d.meta_amount) || 0,
-    score: d => d.SubmissionScore || 0,
-    status: d => d.ProjectStatus || "",
-    concerns: d => d.ConcernCount || 0,
-    risk: d => d.RiskScore || 0,
-  }[key] || (d => d.SubmissionScore || 0);
-  rows.sort((a,b) => {
-    const va = accessor(a), vb = accessor(b);
-    if (va < vb) return -1*dir; if (va > vb) return 1*dir; return 0;
-  });
-  document.querySelector("#projectsTable tbody").innerHTML = rows.length
-    ? rows.map(d => {
-        const cls = (d.ProjectStatus||"").toLowerCase().replace(" ","-");
-        const riskCls = (d.RiskCategory||"").toLowerCase();
-        return `<tr data-project="${d.project||""}">
-          <td>${d.meta_country || d.country || "—"}</td>
-          <td><b>${displayProjectName(d)}</b></td>
-          <td>${d.meta_funding_source || "—"}</td>
-          <td class="tabular">${formatAmount(d.meta_amount)}</td>
-          <td class="tabular">${d.SubmissionScore ?? "—"}%</td>
-          <td><span class="badge ${cls}">${d.ProjectStatus || "—"}</span></td>
-          <td class="tabular">${d.ConcernCount ?? 0}</td>
-          <td><span class="badge ${riskCls}">${d.RiskCategory || "—"}</span></td>
-        </tr>`;
-      }).join("")
-    : "<tr><td colspan='8'>No projects match your filter</td></tr>";
-  document.querySelectorAll("#projectsTable tbody tr[data-project]").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const p = tr.dataset.project;
-      if (p) window.location.href = `project.html?project=${encodeURIComponent(p)}`;
-    });
-  });
-}
-
-function formatAmount(n) {
-  if (n == null || n === "") return "—";
-  const v = Number(n); if (isNaN(v)) return "—";
-  if (v >= 1_000_000) return "$" + (v/1_000_000).toFixed(1) + "M";
-  if (v >= 1_000) return "$" + (v/1_000).toFixed(0) + "K";
-  return "$" + v;
-}
-
-document.addEventListener("DOMContentLoaded", init);
+      <section class="card">
+        <h3>FAQ</h3>
+        <p><strong>How often does data refresh?</strong> Daily at 06:00 UTC.</p>
+        <p><strong>Why is a high-scoring project still at risk?</strong> The risk model weighs concerns and deficit heavily.</p>
+        <p><strong>How do I drill into a project?</strong> Click any project row in the overview table to open the project diagnostics page.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

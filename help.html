@@ -1,74 +1,101 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Help · QA Dashboard</title>
-<link rel="stylesheet" href="assets/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Diagnostics · QA Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">Q</div>
-      <div class="brand-text">
-        <h1>QA Dashboard</h1>
-        <p>Help &amp; Glossary</p>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">Q</div>
+        <div class="brand-text">
+          <h1>QA Dashboard</h1>
+          <p>Project Diagnostics</p>
+        </div>
       </div>
-    </div>
-    <div class="side-block">
-      <p class="side-label">Navigate</p>
-      <a class="side-link" href="index.html">← Executive overview</a>
-      <a class="side-link" href="project.html">Project diagnostics →</a>
-    </div>
-  </aside>
 
-  <main class="main">
-    <div class="topbar"><h2>Help &amp; Glossary</h2></div>
+      <div class="side-block">
+        <p class="side-label">Select project</p>
+        <select class="filter-select" id="selProject"><option value="">— Choose —</option></select>
+      </div>
 
-    <section class="card">
-      <h3>Overview</h3>
-      <p>The QA Dashboard monitors quality across all active Pathfinder projects
-      using a standard checklist submitted through KoboToolbox. Data refreshes
-      daily at 06:00 UTC.</p>
-    </section>
+      <div class="side-block">
+        <p class="side-label">Navigate</p>
+        <a class="side-link" href="index.html">Overview</a>
+        <a class="side-link" href="project.html">Project diagnostics</a>
+        <a class="side-link" href="help.html">Help &amp; glossary</a>
+      </div>
+    </aside>
 
-    <section class="card">
-      <h3>Key Metrics</h3>
-      <table>
-        <thead><tr><th>Metric</th><th>Definition</th></tr></thead>
-        <tbody>
-          <tr><td>Overall QA Score</td><td>Average of all scored answers across submissions</td></tr>
-          <tr><td>Submission Score</td><td>Percentage of compliant answers in one checklist</td></tr>
-          <tr><td>On Track</td><td>Latest score ≥ 80%</td></tr>
-          <tr><td>Needs Attention</td><td>Latest score 60–79%</td></tr>
-          <tr><td>At Risk</td><td>Latest score &lt; 60%</td></tr>
-          <tr><td>Concern</td><td>Negative answer to a question flagged as a concern</td></tr>
-          <tr><td>Risk Score</td><td>(Concerns × 2) + ((1 − Score) × 10)</td></tr>
-          <tr><td>Risk Category</td><td>Critical ≥ 10 · High ≥ 6 · Medium ≥ 3 · Low &lt; 3</td></tr>
-          <tr><td>Programmatic Score</td><td>Average of Programmatic-pillar answers</td></tr>
-          <tr><td>MEL Score</td><td>Average of MEL-pillar answers</td></tr>
-          <tr><td>Startup / Implementation / Closeout Score</td><td>Average of questions in that project stage</td></tr>
-        </tbody>
-      </table>
-    </section>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-switcher" aria-label="Dashboard sections">
+            <a class="nav-pill" href="index.html">Overview</a>
+            <a class="nav-pill active" href="project.html">Projects</a>
+            <a class="nav-pill" href="help.html">Help</a>
+          </div>
+          <h2 id="projectTitle">Project diagnostics</h2>
+          <p class="scope-line" id="projectMeta">—</p>
+        </div>
+        <div class="topbar-actions">
+          <a class="btn btn-ghost" href="index.html">Back</a>
+        </div>
+      </div>
 
-    <section class="card">
-      <h3>Scoring Methodology</h3>
-      <ul>
-        <li>Each question is scored 1 (compliant) or 0 (non-compliant).</li>
-        <li>All questions carry equal weight.</li>
-        <li>Reverse-scored questions are already reflected in the Score column of the Scoring Checklist.</li>
-        <li>Questions with no Score value are excluded.</li>
-      </ul>
-    </section>
+      <section class="stat-strip" id="statStrip"></section>
 
-    <section class="card">
-      <h3>FAQ</h3>
-      <p><strong>How often does data refresh?</strong> Daily at 06:00 UTC.</p>
-      <p><strong>Why is a high-scoring project still At Risk?</strong> The Risk Score weights concerns heavily.</p>
-      <p><strong>How do I drill into a project?</strong> Click any row in "All Projects" or use the sidebar link.</p>
-    </section>
-  </main>
-</div>
+      <section class="grid-2">
+        <div class="card">
+          <h3>Pillar breakdown</h3>
+          <canvas id="pillarChart"></canvas>
+        </div>
+        <div class="card">
+          <h3>Stage breakdown</h3>
+          <canvas id="stageChart"></canvas>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Performance log</h3>
+        <div class="register-wrap">
+          <table class="register">
+            <thead>
+              <tr><th>Submission date</th><th>Score</th><th>Status</th><th>Concerns</th><th>Risk</th><th>Score progress</th></tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Concerns flagged</h3>
+        <p class="card-note">Negative answers to questions flagged as concerns, sorted by stage and pillar.</p>
+        <table id="concernsTable">
+          <thead><tr><th>Stage</th><th>Pillar</th><th>Issue</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h3>All checklist responses</h3>
+        <input type="text" id="responseSearch" placeholder="Search question…" class="register-search">
+        <div class="register-wrap">
+          <table id="responsesTable" class="register">
+            <thead>
+              <tr><th>Question</th><th>Answer</th><th>Score</th><th>Concern</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/project.js"></script>
 </body>
 </html>
