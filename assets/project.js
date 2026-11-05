@@ -1,273 +1,266 @@
-/* ============================================================
-   Project Diagnostics
-   ============================================================ */
+const state = {
+  data: [],
+  project: null,
+  charts: {},
+};
 
-const state = { data: [], project: "", filtered: [], charts: {} };
-
-function displayProjectName(row) {
-  if (!row) return "Unknown project";
-  return row._display_project_name || row.meta_project_title || row.project_title || row.project || "Unknown project";
+function normalizeLabel(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .trim()
+    .replace(/[_/\\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, ch => ch.toUpperCase());
 }
 
-function projectLookupByKey(projectKey) {
-  return state.data.find((entry) => entry.project === projectKey) || null;
+function displayProjectName(row) {
+  if (!row) return 'Unknown project';
+  return normalizeLabel(row._display_project_name || row.meta_project_title || row.project_title || row.project || 'Unknown project');
 }
 
 async function loadJSON(path, fallback) {
   try {
-    const r = await fetch(path, { cache: "no-store" });
-    return r.ok ? await r.json() : fallback;
+    const response = await fetch(path, { cache: 'no-store' });
+    if (!response.ok) return fallback;
+    return await response.json();
   } catch {
     return fallback;
   }
 }
 
-function submissionTimestamp(d) {
-  if (!d) return 0;
-  const raw = d._submission_time || d.today || "";
-  const ts = Date.parse(raw);
-  return Number.isFinite(ts) ? ts : 0;
+function average(values) {
+  if (!values.length) return 0;
+  return Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1));
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 async function init() {
-  const data = await loadJSON("data/live_submissions_scored.json", []);
+  const params = new URLSearchParams(window.location.search);
+  const projectKey = params.get('project');
+  const data = await loadJSON('data/live_submissions_scored.json', []);
   state.data = Array.isArray(data) ? data : [];
 
-  const projects = [...new Set(state.data.map((d) => d.project).filter(Boolean))].sort();
-  const sel = document.getElementById("selProject");
-  if (!sel) return;
-
-  projects.forEach((project) => {
-    const sample = projectLookupByKey(project) || { project };
-    const o = document.createElement("option");
-    o.value = project;
-    o.textContent = displayProjectName(sample);
-    sel.appendChild(o);
+  const selected = state.data.filter(row => {
+    if (!projectKey) return false;
+    return row.project === projectKey;
   });
 
-  const params = new URLSearchParams(window.location.search);
-  const target = params.get("project") || projects[0] || "";
-  if (target) {
-    sel.value = target;
-    state.project = target;
-  } else {
-    state.project = "";
-  }
-
-  render();
-
-  sel.addEventListener("change", (event) => {
-    state.project = event.target.value;
-    const url = new URL(window.location);
-    if (state.project) {
-      url.searchParams.set("project", state.project);
-    } else {
-      url.searchParams.delete("project");
-    }
-    history.replaceState({}, "", url);
-    render();
-  });
-}
-
-function render() {
-  if (!state.project) {
-    const title = document.getElementById("projectTitle");
-    if (title) title.textContent = "Project Diagnostics";
-    const meta = document.getElementById("projectMeta");
-    if (meta) meta.textContent = "No project selected";
-    const strip = document.getElementById("statStrip");
-    if (strip) {
-      strip.innerHTML = "<div class=\"stat-cell\"><span class=\"num\">—</span><div class=\"lbl\">No project selected</div></div>";
-    }
-    const logBody = document.getElementById("logBody");
-    if (logBody) logBody.innerHTML = "<tr><td colspan='6'>No submissions yet</td></tr>";
+  state.project = selected.length ? selected : state.data;
+  if (!state.project.length) {
+    document.getElementById('projectTitle').textContent = 'No project selected';
+    document.getElementById('projectMeta').textContent = 'No matching project data was found';
     return;
   }
 
-  state.filtered = state.data
-    .filter((d) => d.project === state.project)
-    .sort((a, b) => submissionTimestamp(a) - submissionTimestamp(b));
-
-  renderHeader();
-  renderStats();
-  renderPillarChart();
-  renderStageChart();
-  renderPerformanceLog();
-  renderConcerns();
-  renderResponses();
+  populateProjectSelector();
+  bindProjectSelector();
+  renderProject();
 }
 
-function renderHeader() {
-  const title = document.getElementById("projectTitle");
-  if (title) title.textContent = state.project || "Project";
-
-  const s = state.filtered[0] || {};
-  const parts = [];
-  if (s.meta_project_title) parts.push(s.meta_project_title);
-  if (s.meta_country) parts.push(s.meta_country);
-  if (s.meta_funding_source) parts.push(s.meta_funding_source);
-  if (s.meta_project_lead) parts.push("Lead: " + s.meta_project_lead);
-
-  const meta = document.getElementById("projectMeta");
-  if (meta) meta.textContent = parts.join(" · ") || "Project details unavailable";
+function populateProjectSelector() {
+  const select = document.getElementById('selProject');
+  if (!select) return;
+  const unique = [...new Set(state.data.map(row => row.project).filter(Boolean))].sort();
+  unique.forEach(projectKey => {
+    const option = document.createElement('option');
+    option.value = projectKey;
+    option.textContent = displayProjectName(state.data.find(row => row.project === projectKey));
+    if (state.project[0] && projectKey === state.project[0].project) option.selected = true;
+    select.appendChild(option);
+  });
 }
 
-function renderStats() {
-  const d = state.filtered;
-  const latest = d[d.length - 1] || {};
-  const scores = d.map((x) => x.SubmissionScore).filter((s) => s != null);
-  const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
-  const cells = [
-    { num: d.length, lbl: "Checklists Submitted" },
-    { num: latest.SubmissionScore != null ? latest.SubmissionScore + "%" : "—", lbl: "Latest Score", color: statusColor(latest.ProjectStatus) },
-    { num: avg + "%", lbl: "Average Score" },
-    { num: latest.ConcernCount ?? 0, lbl: "Latest Concerns" },
-    { num: latest.RiskCategory || "—", lbl: "Risk Category" },
-    { num: latest.ProjectStatus || "—", lbl: "Status", color: statusColor(latest.ProjectStatus) },
-  ];
+function bindProjectSelector() {
+  const select = document.getElementById('selProject');
+  if (!select) return;
+  select.addEventListener('change', (event) => {
+    const projectKey = event.target.value;
+    if (projectKey) {
+      window.location.href = `project.html?project=${encodeURIComponent(projectKey)}`;
+    }
+  });
 
-  const strip = document.getElementById("statStrip");
-  if (strip) {
-    strip.innerHTML = cells.map((c) =>
-      `<div class="stat-cell"><span class="num" ${c.color ? `style="color:${c.color}"` : ""}>${c.num}</span><div class="lbl">${c.lbl}</div></div>`
-    ).join("");
+  const search = document.getElementById('responseSearch');
+  if (search) {
+    search.addEventListener('input', (event) => {
+      const query = event.target.value.trim().toLowerCase();
+      renderResponseTable(query);
+    });
   }
 }
 
-function statusColor(s) {
-  if (s === "On Track") return "var(--green)";
-  if (s === "Needs Attention") return "var(--amber)";
-  if (s === "At Risk") return "var(--red)";
-  return "inherit";
+function renderProject() {
+  const row = state.project[0];
+  const title = document.getElementById('projectTitle');
+  const meta = document.getElementById('projectMeta');
+  if (title) title.textContent = displayProjectName(row);
+  if (meta) meta.textContent = `${normalizeLabel(row.meta_country || row.country || '—')} · ${normalizeLabel(row.meta_region || row.region || '—')} · ${row.ProjectStatus || 'Unknown status'}`;
+
+  renderStats();
+  renderPillarChart();
+  renderStageChart();
+  renderLogTable();
+  renderConcernTable();
+  renderResponseTable('');
+}
+
+function renderStats() {
+  const strip = document.getElementById('statStrip');
+  if (!strip) return;
+
+  const rows = state.project;
+  const scoreAvg = average(rows.map(row => Number(row.SubmissionScore)).filter(Number.isFinite));
+  const concernAvg = average(rows.map(row => Number(row.ConcernCount)).filter(Number.isFinite));
+  const riskAvg = average(rows.map(row => Number(row.RiskScore)).filter(Number.isFinite));
+
+  const cards = [
+    { value: `${scoreAvg}%`, label: 'Avg score', sub: 'submission score', tone: scoreAvg >= 80 ? 'success' : scoreAvg >= 60 ? 'warning' : 'danger' },
+    { value: concernAvg.toFixed(1), label: 'Concerns', sub: 'per checklist', tone: '' },
+    { value: `${riskAvg}`, label: 'Risk score', sub: 'average risk', tone: riskAvg >= 6 ? 'danger' : riskAvg >= 3 ? 'warning' : 'success' },
+    { value: `${rows.length}`, label: 'Records', sub: 'submitted', tone: '' },
+  ];
+
+  strip.innerHTML = cards.map(card => `
+    <div class="stat-card">
+      <span class="stat-value ${card.tone}">${card.value}</span>
+      <div class="stat-label">${card.label}</div>
+      <div class="stat-sublabel">${card.sub}</div>
+    </div>
+  `).join('');
 }
 
 function renderPillarChart() {
-  const d = state.filtered;
-  const prog = d.map((x) => x.ProgrammaticScore).filter((v) => v != null);
-  const mel = d.map((x) => x.MELScore).filter((v) => v != null);
-  const avg = (arr) => (arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : 0);
+  const canvas = document.getElementById('pillarChart');
+  if (!canvas) return;
+
+  const dataset = [
+    { label: 'Programmatic', value: average(state.project.map(row => Number(row.ProgrammaticScore)).filter(Number.isFinite)) },
+    { label: 'MEL', value: average(state.project.map(row => Number(row.MELScore)).filter(Number.isFinite)) },
+  ];
 
   if (state.charts.pillar) state.charts.pillar.destroy();
-
-  const chartTarget = document.getElementById("pillarChart");
-  if (!chartTarget) return;
-
-  state.charts.pillar = new Chart(chartTarget, {
-    type: "bar",
+  state.charts.pillar = new Chart(canvas, {
+    type: 'bar',
     data: {
-      labels: ["Programmatic", "MEL"],
+      labels: dataset.map(item => item.label),
       datasets: [{
-        label: "Avg score (%)",
-        data: [avg(prog), avg(mel)],
-        backgroundColor: ["#1E88E5", "#7B1FA2"],
+        label: 'Average score',
+        data: dataset.map(item => item.value),
+        backgroundColor: ['#1e6d5f', '#0b84a5'],
       }],
     },
-    options: {
-      indexAxis: "y",
-      scales: { x: { max: 100 } },
-      plugins: { legend: { display: false } },
-      maintainAspectRatio: false,
-    },
+    options: { plugins: { legend: { display: false } }, maintainAspectRatio: false },
   });
 }
 
 function renderStageChart() {
-  const d = state.filtered;
-  const stages = ["Startup", "Implementation", "Closeout"];
-  const values = stages.map((s) => {
-    const arr = d.map((x) => x[`${s}Score`]).filter((v) => v != null);
-    return arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : 0;
-  });
+  const canvas = document.getElementById('stageChart');
+  if (!canvas) return;
+
+  const dataset = [
+    { label: 'Startup', value: average(state.project.map(row => Number(row.StartupScore)).filter(Number.isFinite)) },
+    { label: 'Implementation', value: average(state.project.map(row => Number(row.ImplementationScore)).filter(Number.isFinite)) },
+    { label: 'Closeout', value: average(state.project.map(row => Number(row.CloseoutScore)).filter(Number.isFinite)) },
+  ];
 
   if (state.charts.stage) state.charts.stage.destroy();
-
-  const chartTarget = document.getElementById("stageChart");
-  if (!chartTarget) return;
-
-  state.charts.stage = new Chart(chartTarget, {
-    type: "bar",
+  state.charts.stage = new Chart(canvas, {
+    type: 'radar',
     data: {
-      labels: stages,
+      labels: dataset.map(item => item.label),
       datasets: [{
-        label: "Avg score (%)",
-        data: values,
-        backgroundColor: ["#3C6B52", "#294B39", "#1F3D2E"],
+        label: 'Score',
+        data: dataset.map(item => item.value),
+        borderColor: '#1e6d5f',
+        backgroundColor: 'rgba(30,109,95,0.18)',
       }],
     },
-    options: {
-      scales: { y: { max: 100 } },
-      plugins: { legend: { display: false } },
-      maintainAspectRatio: false,
-    },
+    options: { maintainAspectRatio: false },
   });
 }
 
-function renderPerformanceLog() {
-  const rows = state.filtered.slice().reverse();
-  const body = rows.map((d, i) => {
-    const prevInOrder = state.filtered[state.filtered.length - 2 - i];
-    const prev = prevInOrder ? prevInOrder.SubmissionScore : null;
-    let progressCell = "-";
-    if (d.SubmissionScore != null && prev != null) {
-      const change = d.SubmissionScore - prev;
-      if (Math.abs(change) < 0.05) progressCell = '<span class="progress-flat">● 0.0%</span>';
-      else if (change > 0) progressCell = `<span class="progress-up">▲ +${change.toFixed(1)}%</span>`;
-      else progressCell = `<span class="progress-down">▼ ${change.toFixed(1)}%</span>`;
-    }
-    const cls = (d.ProjectStatus || "").toLowerCase().replace(" ", "-");
-    return `<tr>
-      <td>${d.today || (d._submission_time || "").slice(0, 10)}</td>
-      <td class="tabular">${d.SubmissionScore ?? "—"}%</td>
-      <td><span class="badge ${cls}">${d.ProjectStatus || "—"}</span></td>
-      <td class="tabular">${d.ConcernCount ?? 0}</td>
-      <td><span class="badge ${(d.RiskCategory || "").toLowerCase()}">${d.RiskCategory || "—"}</span></td>
-      <td>${progressCell}</td>
-    </tr>`;
-  }).join("");
+function renderLogTable() {
+  const tbody = document.getElementById('logBody');
+  if (!tbody) return;
 
-  const logBody = document.getElementById("logBody");
-  if (logBody) logBody.innerHTML = body || "<tr><td colspan='6'>No submissions yet</td></tr>";
+  tbody.innerHTML = state.project.map(row => {
+    const score = Number(row.SubmissionScore) || 0;
+    const tone = score >= 80 ? 'success' : score >= 60 ? 'warning' : 'danger';
+    return `
+      <tr>
+        <td>${formatDate(row._submission_time || row.submission_date || row.end || row.start)}</td>
+        <td class="tabular">${score}%</td>
+        <td><span class="badge ${row.ProjectStatus ? row.ProjectStatus.toLowerCase().replace(/\s+/g, '-') : 'low'}">${row.ProjectStatus || '—'}</span></td>
+        <td class="tabular">${row.ConcernCount ?? 0}</td>
+        <td class="tabular">${row.RiskScore ?? '—'}</td>
+        <td>
+          <div class="progress-bar"><span class="progress-bar-fill" style="width:${Math.min(score, 100)}%; background:${tone === 'success' ? '#0c9a69' : tone === 'warning' ? '#cf8a00' : '#d64545'};"></span></div>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
-function renderConcerns() {
-  const latest = state.filtered[state.filtered.length - 1] || {};
-  const concerns = latest.ConcernQuestions || [];
-  const tableBody = document.querySelector("#concernsTable tbody");
-  if (!tableBody) return;
+function renderConcernTable() {
+  const tbody = document.getElementById('concernsTableBody');
+  if (!tbody) return;
 
-  tableBody.innerHTML = concerns.length
-    ? concerns.map((c) => `<tr><td>${c.stage || "—"}</td><td>${c.pillar || "—"}</td><td>${c.issue || c.question}</td></tr>`).join("")
-    : "<tr><td colspan='3'>No concerns flagged in the latest submission</td></tr>";
-}
-
-function renderResponses() {
-  const latest = state.filtered[state.filtered.length - 1] || {};
-  const rows = [];
-  Object.keys(latest).forEach((k) => {
-    if (!k.endsWith("_AnswerC")) return;
-    const q = k.replace("_AnswerC", "");
-    rows.push({ question: q, answer: latest[q], score: latest[k], concern: latest[`${q}_IsConcern`] });
+  const concerns = [];
+  state.project.forEach(row => {
+    (row.ConcernQuestions || []).forEach(item => {
+      concerns.push({
+        stage: item.stage || 'Unknown',
+        pillar: item.pillar || 'Unknown',
+        issue: item.issue || item.question || 'Unknown issue',
+      });
+    });
   });
 
-  const search = (document.getElementById("responseSearch")?.value || "").toLowerCase();
-  const filtered = search ? rows.filter((r) => r.question.toLowerCase().includes(search)) : rows;
-
-  const tableBody = document.querySelector("#responsesTable tbody");
-  if (!tableBody) return;
-
-  tableBody.innerHTML = filtered.length
-    ? filtered.map((r) => {
-        const cls = r.score == null ? "amber" : r.score === 1 ? "green" : "red";
-        return `<tr><td>${r.question}</td><td>${r.answer ?? "—"}</td><td><span class="badge ${cls}">${r.score ?? "—"}</span></td><td>${r.concern ? '<span class="badge red">Concern</span>' : "—"}</td></tr>`;
-      }).join("")
-    : "<tr><td colspan='4'>No responses</td></tr>";
+  tbody.innerHTML = concerns.length
+    ? concerns.map(item => `
+        <tr>
+          <td>${item.stage}</td>
+          <td>${item.pillar}</td>
+          <td>${item.issue}</td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="3">No concerns flagged</td></tr>';
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  init().then(() => {
-    const searchBox = document.getElementById("responseSearch");
-    if (searchBox) {
-      searchBox.addEventListener("input", renderResponses);
-    }
+function renderResponseTable(query) {
+  const tbody = document.getElementById('responsesTableBody');
+  if (!tbody) return;
+
+  const rows = state.project.flatMap(row => Object.entries(row)
+    .filter(([key, value]) => key.endsWith('_AnswerC') || key.endsWith('_IsConcern') || key.endsWith('_ScoringType'))
+    .map(([key, value]) => ({
+      question: key.replace(/_(AnswerC|IsConcern|ScoringType)$/, ''),
+      answer: row[key.replace(/_AnswerC$/, '_AnswerC')] ?? row[key.replace(/_IsConcern$/, '_AnswerC')] ?? '',
+      score: row[key],
+      concern: row[key.replace(/_AnswerC$/, '_IsConcern')] ?? 0,
+    })));
+
+  const filtered = rows.filter(item => {
+    const questionText = item.question.toLowerCase();
+    return !query || questionText.includes(query);
   });
-});
+
+  tbody.innerHTML = filtered.length
+    ? filtered.map(item => `
+        <tr>
+          <td>${item.question}</td>
+          <td>${item.answer ?? '—'}</td>
+          <td class="tabular">${item.score ?? '—'}</td>
+          <td>${item.concern ? 'Yes' : 'No'}</td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="4">No matching checklist responses</td></tr>';
+}
+
+document.addEventListener('DOMContentLoaded', init);

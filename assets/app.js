@@ -1,17 +1,23 @@
-/* ============================================================
-   QA Dashboard — Executive Overview
-   ============================================================ */
-
 const state = {
-  data: [], filtered: [],
-  filters: { region:"", country:"", project:"", funding:"", tech:"", year:"", quarter:"", stage:"", status:"", search:"" },
-  sort: { key:"score", dir:"asc" },
+  data: [],
+  filtered: [],
+  filters: { region: '', country: '', project: '', funding: '', tech: '', year: '', quarter: '', stage: '', status: '', search: '' },
+  sort: { key: 'score', dir: 'desc' },
   charts: {},
 };
 
+function normalizeLabel(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .trim()
+    .replace(/[_/\\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, ch => ch.toUpperCase());
+}
+
 function displayProjectName(row) {
-  if (!row) return "Unknown project";
-  return row._display_project_name || row.meta_project_title || row.project || "Unknown project";
+  if (!row) return 'Unknown project';
+  return normalizeLabel(row._display_project_name || row.meta_project_title || row.project_title || row.project || 'Unknown project');
 }
 
 function projectLookupByKey(projectKey) {
@@ -19,129 +25,186 @@ function projectLookupByKey(projectKey) {
 }
 
 async function loadJSON(path, fallback) {
-  try { const r = await fetch(path, {cache:"no-store"}); return r.ok ? await r.json() : fallback; }
-  catch { return fallback; }
+  try {
+    const response = await fetch(path, { cache: 'no-store' });
+    if (!response.ok) return fallback;
+    return await response.json();
+  } catch {
+    return fallback;
+  }
+}
+
+function uniqueValues(rows, key) {
+  return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
 }
 
 async function init() {
   const [data, meta] = await Promise.all([
-    loadJSON("data/live_submissions_scored.json", []),
-    loadJSON("data/live_meta.json", {}),
+    loadJSON('data/live_submissions_scored.json', []),
+    loadJSON('data/live_meta.json', {})
   ]);
 
   state.data = Array.isArray(data) ? data : [];
-  state.filtered = state.data;
+  state.filtered = [...state.data];
 
   if (!state.data.length) {
-    document.getElementById("scopeLine").textContent = "No data available — refresh the dashboard";
-    document.getElementById("updatedNote").textContent = "Awaiting first refresh";
-    document.getElementById("statStrip").innerHTML = `
-      <div class="stat-card">
-        <span class="stat-value">—</span>
-        <div class="stat-label">No data yet</div>
-        <div class="stat-sublabel">Run the pipeline or refresh Kobo data</div>
-      </div>
-    `;
-    document.querySelector("#projectsTable tbody").innerHTML = "<tr><td colspan='8'>No data available yet</td></tr>";
+    const scopeLine = document.getElementById('scopeLine');
+    if (scopeLine) scopeLine.textContent = 'No data available — refresh the dashboard';
+    const updatedNote = document.getElementById('updatedNote');
+    if (updatedNote) updatedNote.textContent = 'Awaiting first refresh';
+    const container = document.getElementById('statStrip');
+    if (container) {
+      container.innerHTML = `
+        <div class="stat-card">
+          <span class="stat-value">—</span>
+          <div class="stat-label">No data yet</div>
+          <div class="stat-sublabel">Run the pipeline or refresh Kobo data</div>
+        </div>
+      `;
+    }
+    if (document.getElementById('projectsTableBody')) { document.getElementById('projectsTableBody').innerHTML = '<tr><td colspan="8">No data available yet</td></tr>'; }
     return;
   }
 
   populateFilters();
+  bindControls();
   renderMeta(meta);
-  wireEvents();
   render();
 }
 
 function populateFilters() {
-  const d = state.data;
-  const uniq = key => [...new Set(d.map(x => x[key]).filter(Boolean))].sort();
-  fill("selRegion", uniq("meta_region").concat(uniq("region")));
-  fill("selCountry", uniq("meta_country").concat(uniq("country")));
-  fillProjectOptions("selProject");
-  fill("selFunding", uniq("meta_funding_source"));
-  fill("selTech", uniq("meta_technical_area"));
-  fill("selYear", uniq("meta_year").concat(uniq("year")));
-  fill("selQuarter", uniq("meta_quarter").concat(uniq("quarter")));
+  const rows = state.data;
+  const regionValues = uniqueValues(rows, 'meta_region').concat(uniqueValues(rows, 'region'));
+  const countryValues = uniqueValues(rows, 'meta_country').concat(uniqueValues(rows, 'country'));
+  const fundingValues = uniqueValues(rows, 'meta_funding_source');
+  const techValues = uniqueValues(rows, 'meta_technical_area');
+  const yearValues = uniqueValues(rows, 'meta_year').concat(uniqueValues(rows, 'year'));
+  const quarterValues = uniqueValues(rows, 'meta_quarter').concat(uniqueValues(rows, 'quarter'));
+
+  fillSelect('selRegion', [...new Set(regionValues.map(v => normalizeLabel(v)))].filter(Boolean));
+  fillSelect('selCountry', [...new Set(countryValues.map(v => normalizeLabel(v)))].filter(Boolean));
+  fillProjectSelect();
+  fillSelect('selFunding', [...new Set(fundingValues.map(v => normalizeLabel(v)))].filter(Boolean));
+  fillSelect('selTech', [...new Set(techValues.map(v => normalizeLabel(v)))].filter(Boolean));
+  fillSelect('selYear', [...new Set(yearValues.map(v => String(v)))].filter(Boolean));
+  fillSelect('selQuarter', [...new Set(quarterValues.map(v => String(v)))].filter(Boolean));
 }
 
-function fill(id, values) {
-  const sel = document.getElementById(id);
-  [...new Set(values)].filter(Boolean).sort().forEach(v => {
-    const o = document.createElement("option");
-    o.value = String(v);
-    o.textContent = String(v);
-    sel.appendChild(o);
+function fillSelect(id, values) {
+  const select = document.getElementById(id);
+  if (!select) return;
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">All</option>';
+  values.forEach(v => {
+    const option = document.createElement('option');
+    option.value = String(v);
+    option.textContent = String(v);
+    select.appendChild(option);
+  });
+  if (currentValue) select.value = currentValue;
+}
+
+function fillProjectSelect() {
+  const select = document.getElementById('selProject');
+  if (!select) return;
+  const projects = [...new Set(state.data.map(r => r.project).filter(Boolean))];
+  select.innerHTML = '<option value="">All projects</option>';
+  projects.forEach(projectKey => {
+    const option = document.createElement('option');
+    option.value = projectKey;
+    option.textContent = displayProjectName(projectLookupByKey(projectKey));
+    select.appendChild(option);
   });
 }
 
-function fillProjectOptions(id) {
-  const sel = document.getElementById(id);
-  const projectKeys = [...new Set(state.data.map(x => x.project).filter(Boolean))].sort();
+function bindControls() {
+  ['selRegion', 'selCountry', 'selProject', 'selFunding', 'selTech', 'selYear', 'selQuarter', 'selStage', 'selStatus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', (event) => {
+      const keyMap = {
+        selRegion: 'region',
+        selCountry: 'country',
+        selProject: 'project',
+        selFunding: 'funding',
+        selTech: 'tech',
+        selYear: 'year',
+        selQuarter: 'quarter',
+        selStage: 'stage',
+        selStatus: 'status',
+      };
+      state.filters[keyMap[id]] = event.target.value;
+      applyFilters();
+    });
+  });
 
-  projectKeys.forEach(projectKey => {
-    const sample = projectLookupByKey(projectKey) || { project: projectKey };
-    const o = document.createElement("option");
-    o.value = projectKey;
-    o.textContent = displayProjectName(sample);
-    sel.appendChild(o);
-  });
-}
+  const search = document.getElementById('projectSearch');
+  if (search) {
+    search.addEventListener('input', (event) => {
+      state.filters.search = event.target.value.trim().toLowerCase();
+      render();
+    });
+  }
 
-function wireEvents() {
-  const map = { selRegion:"region", selCountry:"country", selProject:"project", selFunding:"funding", selTech:"tech", selYear:"year", selQuarter:"quarter", selStage:"stage", selStatus:"status" };
-  Object.entries(map).forEach(([id, key]) => {
-    document.getElementById(id).addEventListener("change", e => { state.filters[key] = e.target.value; applyFilters(); });
-  });
-  document.getElementById("projectSearch").addEventListener("input", e => {
-    state.filters.search = e.target.value.toLowerCase(); render();
-  });
-  document.getElementById("btnReset").addEventListener("click", resetFilters);
-  document.getElementById("btnExportExcel").addEventListener("click", () => exportExcel(state.filtered, state.filters));
-  document.getElementById("btnExportWord").addEventListener("click", () => exportWord(state.filtered, state.filters));
-  document.querySelectorAll("#projectsTable th[data-sort]").forEach(th => {
-    th.addEventListener("click", () => {
-      const key = th.dataset.sort;
-      if (state.sort.key === key) state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
-      else { state.sort.key = key; state.sort.dir = "asc"; }
+  const reset = document.getElementById('btnReset');
+  if (reset) {
+    reset.addEventListener('click', () => {
+      state.filters = { region: '', country: '', project: '', funding: '', tech: '', year: '', quarter: '', stage: '', status: '', search: '' };
+      document.getElementById('projectSearch').value = '';
+      ['selRegion', 'selCountry', 'selProject', 'selFunding', 'selTech', 'selYear', 'selQuarter', 'selStage', 'selStatus'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = '';
+      });
+      applyFilters();
+    });
+  }
+
+  const excelBtn = document.getElementById('btnExportExcel');
+  if (excelBtn) excelBtn.addEventListener('click', () => exportExcel(state.filtered, state.filters));
+
+  const wordBtn = document.getElementById('btnExportWord');
+  if (wordBtn) wordBtn.addEventListener('click', () => exportWord(state.filtered, state.filters));
+
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const nextKey = th.dataset.sort;
+      if (state.sort.key === nextKey) {
+        state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sort.key = nextKey;
+        state.sort.dir = 'asc';
+      }
       renderProjectsTable();
     });
   });
 }
 
-function resetFilters() {
-  state.filters = { region:"", country:"", project:"", funding:"", tech:"", year:"", quarter:"", stage:"", status:"", search:"" };
-  ["selRegion","selCountry","selProject","selFunding","selTech","selYear","selQuarter","selStage","selStatus"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("projectSearch").value = "";
-  applyFilters();
-}
-
-function stageMatches(row, stage) {
-  if (!stage) return true;
-  const key = `${stage}Score`;
-  return row[key] != null;
-}
-
 function applyFilters() {
-  const f = state.filters;
-  state.filtered = state.data.filter(d => {
-    const region = d.meta_region || d.region || "";
-    const country = d.meta_country || d.country || "";
-    const year = String(d.meta_year ?? d.year ?? "");
-    const quarter = String(d.meta_quarter ?? d.quarter ?? "");
-    const projectTitle = displayProjectName(d).toLowerCase();
-    const searchMatch = !f.search || projectTitle.includes(f.search) || country.toLowerCase().includes(f.search);
+  state.filtered = state.data.filter((row) => {
+    const region = normalizeLabel(row.meta_region || row.region || '');
+    const country = normalizeLabel(row.meta_country || row.country || '');
+    const funding = normalizeLabel(row.meta_funding_source || '');
+    const tech = normalizeLabel(row.meta_technical_area || '');
+    const year = String(row.meta_year ?? row.year ?? '');
+    const quarter = String(row.meta_quarter ?? row.quarter ?? '');
+    const projectName = displayProjectName(row).toLowerCase();
+    const query = state.filters.search || '';
 
-    return (!f.region || region === f.region)
-      && (!f.country || country === f.country)
-      && (!f.project || d.project === f.project)
-      && (!f.funding || d.meta_funding_source === f.funding)
-      && (!f.tech || d.meta_technical_area === f.tech)
-      && (!f.year || year === String(f.year))
-      && (!f.quarter || quarter === String(f.quarter))
-      && (!f.stage || stageMatches(d, f.stage))
-      && (!f.status || d.ProjectStatus === f.status)
-      && searchMatch;
+    const matches =
+      (!state.filters.region || region === normalizeLabel(state.filters.region)) &&
+      (!state.filters.country || country === normalizeLabel(state.filters.country)) &&
+      (!state.filters.project || row.project === state.filters.project) &&
+      (!state.filters.funding || funding === normalizeLabel(state.filters.funding)) &&
+      (!state.filters.tech || tech === normalizeLabel(state.filters.tech)) &&
+      (!state.filters.year || year === String(state.filters.year)) &&
+      (!state.filters.quarter || quarter === String(state.filters.quarter)) &&
+      (!state.filters.status || row.ProjectStatus === state.filters.status) &&
+      (!state.filters.stage || row.ProjectStatus === state.filters.stage || row[`${state.filters.stage}Score`] !== undefined || row.stage === state.filters.stage) &&
+      (!query || projectName.includes(query) || country.toLowerCase().includes(query));
+
+    return matches;
   });
+
   render();
 }
 
@@ -157,171 +220,257 @@ function render() {
 }
 
 function renderScope() {
-  const n = state.filtered.length;
-  const projects = new Set(state.filtered.map(d => d.project).filter(Boolean)).size;
-  document.getElementById("scopeLine").textContent = `${n} checklist${n===1?"":"s"} · ${projects} project${projects===1?"":"s"}`;
+  const scopeLine = document.getElementById('scopeLine');
+  if (!scopeLine) return;
+  const count = state.filtered.length;
+  const projects = new Set(state.filtered.map(row => row.project).filter(Boolean)).size;
+  scopeLine.textContent = `${count} checklist${count === 1 ? '' : 's'} · ${projects} project${projects === 1 ? '' : 's'}`;
 }
 
 function renderMeta(meta) {
-  document.getElementById("updatedNote").textContent = meta.fetched_at ? "Updated " + new Date(meta.fetched_at).toLocaleString() : "Awaiting first refresh";
+  const updatedNote = document.getElementById('updatedNote');
+  if (!updatedNote) return;
+  if (meta && meta.fetched_at) updatedNote.textContent = new Date(meta.fetched_at).toLocaleString();
+  else updatedNote.textContent = 'Awaiting first refresh';
 }
 
 function renderStats() {
-  const d = state.filtered;
-  const scores = d.map(x => x.SubmissionScore).filter(s => s != null);
-  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-  const statuses = { "On Track":0, "Needs Attention":0, "At Risk":0 };
-  d.forEach(x => { if (statuses[x.ProjectStatus] != null) statuses[x.ProjectStatus]++; });
-  const projects = new Set(d.map(x => x.project).filter(Boolean)).size;
-  const cells = [
-    { num: projects, lbl: "Projects Reporting", sub: "in scope" },
-    { num: d.length, lbl: "Checklists Submitted", sub: "total" },
-    { num: avg + "%", lbl: "Overall QA Score", sub: "average" },
-    { num: statuses["On Track"], lbl: "On Track", sub: "≥ 80%", color:"var(--color-success)" },
-    { num: statuses["Needs Attention"], lbl: "Needs Attention", sub: "60–79%", color:"var(--color-warning)" },
-    { num: statuses["At Risk"], lbl: "At Risk", sub: "< 60%", color:"var(--color-danger)" },
+  const strip = document.getElementById('statStrip');
+  if (!strip) return;
+
+  const rows = state.filtered;
+  const scores = rows.map(r => Number(r.SubmissionScore)).filter(Number.isFinite);
+  const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '—';
+  const onTrack = rows.filter(r => r.ProjectStatus === 'On Track').length;
+  const needsAttention = rows.filter(r => r.ProjectStatus === 'Needs Attention').length;
+  const atRisk = rows.filter(r => r.ProjectStatus === 'At Risk').length;
+  const projectCount = new Set(rows.map(r => r.project).filter(Boolean)).size;
+
+  const cards = [
+    { value: projectCount, label: 'Projects reporting', sub: 'in scope', tone: '' },
+    { value: rows.length, label: 'Checklists submitted', sub: 'total', tone: '' },
+    { value: avg === '—' ? '—' : `${avg}%`, label: 'Overall QA score', sub: 'average', tone: '' },
+    { value: onTrack, label: 'On track', sub: '≥ 80%', tone: 'success' },
+    { value: needsAttention, label: 'Needs attention', sub: '60–79%', tone: 'warning' },
+    { value: atRisk, label: 'At risk', sub: '< 60%', tone: 'danger' },
   ];
-  document.getElementById("statStrip").innerHTML = cells.map(c =>
-    `<div class="stat-card"><span class="stat-value ${c.color ? (c.color.includes('success') ? 'success' : c.color.includes('warning') ? 'warning' : 'danger') : ''}" style="${c.color ? `color:${c.color}` : ''}">${c.num}</span><div class="stat-label">${c.lbl}</div><div class="stat-sublabel">${c.sub}</div></div>`
-  ).join("");
+
+  strip.innerHTML = cards.map(card => `
+    <div class="stat-card">
+      <span class="stat-value ${card.tone}">${card.value}</span>
+      <div class="stat-label">${card.label}</div>
+      <div class="stat-sublabel">${card.sub}</div>
+    </div>
+  `).join('');
 }
 
 function renderStatusChart() {
-  const counts = { "On Track":0, "Needs Attention":0, "At Risk":0 };
-  state.filtered.forEach(d => { if (counts[d.ProjectStatus] != null) counts[d.ProjectStatus]++; });
-  const ctx = document.getElementById("statusChart");
+  const canvas = document.getElementById('statusChart');
+  if (!canvas) return;
+  const counts = { 'On Track': 0, 'Needs Attention': 0, 'At Risk': 0 };
+  state.filtered.forEach(row => {
+    if (counts[row.ProjectStatus] !== undefined) counts[row.ProjectStatus] += 1;
+  });
+
   if (state.charts.status) state.charts.status.destroy();
-  state.charts.status = new Chart(ctx, {
-    type: "doughnut",
-    data: { labels: Object.keys(counts), datasets:[{ data: Object.values(counts), backgroundColor:["#059669", "#d97706", "#dc2626"] }] },
-    options: { plugins:{ legend:{ position:"bottom" } }, maintainAspectRatio:false },
+  state.charts.status = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(counts),
+      datasets: [{
+        data: Object.values(counts),
+        backgroundColor: ['#0c9a69', '#cf8a00', '#d64545'],
+      }],
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, maintainAspectRatio: false },
   });
 }
 
 function renderCompletionChart() {
+  const canvas = document.getElementById('completionChart');
+  if (!canvas) return;
   const byCountry = {};
-  state.filtered.forEach(d => {
-    const c = d.meta_country || d.country; if (!c) return;
-    byCountry[c] = (byCountry[c] || 0) + 1;
+  state.filtered.forEach(row => {
+    const country = normalizeLabel(row.meta_country || row.country || '');
+    if (!country) return;
+    byCountry[country] = (byCountry[country] || 0) + 1;
   });
-  const sorted = Object.entries(byCountry).sort((a,b)=>b[1]-a[1]);
-  const ctx = document.getElementById("completionChart");
+
+  const entries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (state.charts.completion) state.charts.completion.destroy();
-  state.charts.completion = new Chart(ctx, {
-    type: "bar",
-    data: { labels: sorted.map(x=>x[0]), datasets:[{ label:"Checklists", data: sorted.map(x=>x[1]), backgroundColor:"#1f5c3d" }] },
-    options: { indexAxis:"y", plugins:{ legend:{ display:false } }, maintainAspectRatio:false },
+  state.charts.completion = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: entries.map(([country]) => country),
+      datasets: [{
+        label: 'Checklists',
+        data: entries.map(([, count]) => count),
+        backgroundColor: '#1e6d5f',
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      maintainAspectRatio: false,
+    },
   });
 }
 
 function renderPillarGrid() {
-  const d = state.filtered;
-  const pillars = [
-    { key:"ProgrammaticScore", label:"Programmatic", color:"#1f5c3d" },
-    { key:"MELScore", label:"MEL", color:"#0284c7" },
-    { key:null, label:"Stages", custom:true },
+  const container = document.getElementById('pillarGrid');
+  if (!container) return;
+
+  const pillarKeys = [
+    { key: 'ProgrammaticScore', title: 'Programmatic' },
+    { key: 'MELScore', title: 'MEL' },
+    { key: 'StartupScore', title: 'Startup' },
+    { key: 'ImplementationScore', title: 'Implementation' },
+    { key: 'CloseoutScore', title: 'Closeout' },
   ];
-  document.getElementById("pillarGrid").innerHTML = pillars.map(p => {
-    if (p.custom) {
-      const stages = ["Startup","Implementation","Closeout"];
-      return stages.map(s => {
-        const key = `${s}Score`;
-        const scores = d.map(x => x[key]).filter(v => v != null);
-        const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-        const pct = avg === "—" ? 0 : Number(avg);
-        const color = pct>=80?"var(--color-success)":pct>=60?"var(--color-warning)":"var(--color-danger)";
-        return `<div class="pillar-cell">
-          <div class="pillar-label">${s} Stage</div>
-          <div class="pillar-value" style="color:${color}">${avg}${avg==="—"?"":"%"}</div>
-          <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100,pct)}%; background:${color};"></div></div>
-          <div class="pillar-foot">${scores.length} submission${scores.length===1?"":"s"} scored</div>
-        </div>`;
-      }).join("");
-    }
-    const scores = d.map(x => x[p.key]).filter(v => v != null);
-    const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-    const pct = avg === "—" ? 0 : Number(avg);
-    const color = pct>=80?"var(--color-success)":pct>=60?"var(--color-warning)":"var(--color-danger)";
-    return `<div class="pillar-cell">
-      <div class="pillar-label">${p.label} Pillar</div>
-      <div class="pillar-value" style="color:${color}">${avg}${avg==="—"?"":"%"}</div>
-      <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(100,pct)}%; background:${color};"></div></div>
-      <div class="pillar-foot">${scores.length} submission${scores.length===1?"":"s"} scored</div>
-    </div>`;
-  }).join("");
+
+  container.innerHTML = pillarKeys.map((pillar) => {
+    const values = state.filtered.map(row => Number(row[pillar.key])).filter(Number.isFinite);
+    const avg = values.length ? (values.reduce((a, b) => a + b, 0) / values.length) : 0;
+    const percent = Number.isFinite(avg) ? avg : 0;
+    const tone = percent >= 80 ? '#0c9a69' : percent >= 60 ? '#cf8a00' : '#d64545';
+    return `
+      <div class="pillar-cell">
+        <div class="pillar-label">${pillar.title}</div>
+        <div class="pillar-value" style="color:${tone}">${values.length ? `${percent.toFixed(1)}%` : '—'}</div>
+        <div class="progress-bar"><span class="progress-bar-fill" style="width:${Math.min(percent, 100)}%; background:${tone};"></span></div>
+        <div class="pillar-foot">${values.length} scored item${values.length === 1 ? '' : 's'}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderRiskTable() {
-  const atRisk = state.filtered.filter(d => d.ProjectStatus === "At Risk").slice(0, 5);
-  document.querySelector("#riskTable tbody").innerHTML = atRisk.length
-    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${displayProjectName(d)}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${((d.RiskCategory || "").toLowerCase())}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
-    : "<tr><td colspan='4'>No projects at risk 🎉</td></tr>";
+  const tbody = document.getElementById('riskTableBody');
+  if (!tbody) return;
+
+  const rows = state.filtered.filter(row => row.ProjectStatus === 'At Risk' || row.RiskCategory === 'High').slice(0, 5);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4">No projects at risk</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => {
+    const riskClass = (row.RiskCategory || 'Low').toLowerCase();
+    return `
+      <tr>
+        <td>${normalizeLabel(row.meta_country || row.country || '—')}</td>
+        <td>${displayProjectName(row)}</td>
+        <td class="tabular">${row.SubmissionScore ?? '—'}%</td>
+        <td><span class="badge ${riskClass}">${row.RiskCategory || 'Low'}</span></td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderConcernsTable() {
+  const tbody = document.getElementById('concernsTableBody');
+  if (!tbody) return;
+
   const counts = {};
-  state.filtered.forEach(d => {
-    (d.ConcernQuestions || []).forEach(c => {
-      const key = c.issue || c.question;
+  state.filtered.forEach(row => {
+    const concerns = Array.isArray(row.ConcernQuestions) ? row.ConcernQuestions : [];
+    concerns.forEach(item => {
+      const key = item.issue || item.question || 'Unknown issue';
       counts[key] = (counts[key] || 0) + 1;
     });
   });
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.querySelector("#concernsTable tbody").innerHTML = sorted.length
-    ? sorted.map(([issue,n]) => `<tr><td>${issue}</td><td class="tabular">${n}</td></tr>`).join("")
-    : "<tr><td colspan='2'>No concerns in scope</td></tr>";
+
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="2">No concerns in scope</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(([issue, count]) => `
+    <tr>
+      <td>${issue}</td>
+      <td class="tabular">${count}</td>
+    </tr>
+  `).join('');
 }
 
 function renderProjectsTable() {
-  let rows = state.filtered.slice();
-  const q = state.filters.search;
-  if (q) rows = rows.filter(d => displayProjectName(d).toLowerCase().includes(q) || (d.meta_country||d.country||"").toLowerCase().includes(q));
-  const dir = state.sort.dir === "asc" ? 1 : -1;
-  const key = state.sort.key;
-  const accessor = {
-    country: d => d.meta_country || d.country || "",
-    project: d => displayProjectName(d),
-    funding: d => d.meta_funding_source || "",
-    amount: d => Number(d.meta_amount) || 0,
-    score: d => d.SubmissionScore || 0,
-    status: d => d.ProjectStatus || "",
-    concerns: d => d.ConcernCount || 0,
-    risk: d => d.RiskScore || 0,
-  }[key] || (d => d.SubmissionScore || 0);
-  rows.sort((a,b) => {
-    const va = accessor(a), vb = accessor(b);
-    if (va < vb) return -1*dir; if (va > vb) return 1*dir; return 0;
+  const tbody = document.getElementById('projectsTableBody');
+  if (!tbody) return;
+
+  let rows = [...state.filtered];
+  const search = state.filters.search || '';
+  if (search) {
+    rows = rows.filter(row => {
+      const projectName = displayProjectName(row).toLowerCase();
+      const country = normalizeLabel(row.meta_country || row.country || '').toLowerCase();
+      return projectName.includes(search) || country.includes(search);
+    });
+  }
+
+  const sortKey = state.sort.key;
+  rows.sort((a, b) => {
+    const valueA = accessorFor(sortKey, a);
+    const valueB = accessorFor(sortKey, b);
+    if (valueA < valueB) return state.sort.dir === 'asc' ? -1 : 1;
+    if (valueA > valueB) return state.sort.dir === 'asc' ? 1 : -1;
+    return 0;
   });
-  document.querySelector("#projectsTable tbody").innerHTML = rows.length
-    ? rows.map(d => {
-        const cls = (d.ProjectStatus||"").toLowerCase().replace(" ","-");
-        const riskCls = (d.RiskCategory||"").toLowerCase();
-        return `<tr data-project="${d.project||""}">
-          <td>${d.meta_country || d.country || "—"}</td>
-          <td><b>${displayProjectName(d)}</b></td>
-          <td>${d.meta_funding_source || "—"}</td>
-          <td class="tabular">${formatAmount(d.meta_amount)}</td>
-          <td class="tabular">${d.SubmissionScore ?? "—"}%</td>
-          <td><span class="badge ${cls}">${d.ProjectStatus || "—"}</span></td>
-          <td class="tabular">${d.ConcernCount ?? 0}</td>
-          <td><span class="badge ${riskCls}">${d.RiskCategory || "—"}</span></td>
-        </tr>`;
-      }).join("")
-    : "<tr><td colspan='8'>No projects match your filter</td></tr>";
-  document.querySelectorAll("#projectsTable tbody tr[data-project]").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const p = tr.dataset.project;
-      if (p) window.location.href = `project.html?project=${encodeURIComponent(p)}`;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8">No projects match your filters</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => {
+    const status = row.ProjectStatus || '—';
+    const badgeClass = status.toLowerCase().replace(/\s+/g, '-');
+    const riskClass = (row.RiskCategory || 'Low').toLowerCase();
+    return `
+      <tr data-project="${row.project || ''}">
+        <td>${normalizeLabel(row.meta_country || row.country || '—')}</td>
+        <td>${displayProjectName(row)}</td>
+        <td>${normalizeLabel(row.meta_funding_source || '—')}</td>
+        <td class="tabular">${formatNumber(row.meta_amount)}</td>
+        <td class="tabular">${row.SubmissionScore ?? '—'}%</td>
+        <td><span class="badge ${badgeClass}">${status}</span></td>
+        <td class="tabular">${row.ConcernCount ?? 0}</td>
+        <td><span class="badge ${riskClass}">${row.RiskCategory || 'Low'}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('tr[data-project]').forEach(row => {
+    row.addEventListener('click', () => {
+      const projectKey = row.dataset.project;
+      if (projectKey) {
+        window.location.href = `project.html?project=${encodeURIComponent(projectKey)}`;
+      }
     });
   });
 }
 
-function formatAmount(n) {
-  if (n == null || n === "") return "—";
-  const v = Number(n); if (isNaN(v)) return "—";
-  if (v >= 1_000_000) return "$" + (v/1_000_000).toFixed(1) + "M";
-  if (v >= 1_000) return "$" + (v/1_000).toFixed(0) + "K";
-  return "$" + v;
+function accessorFor(key, row) {
+  const accessorMap = {
+    country: () => normalizeLabel(row.meta_country || row.country || ''),
+    project: () => displayProjectName(row),
+    funding: () => normalizeLabel(row.meta_funding_source || ''),
+    amount: () => Number(row.meta_amount) || 0,
+    score: () => Number(row.SubmissionScore) || 0,
+    status: () => row.ProjectStatus || '',
+    concerns: () => Number(row.ConcernCount) || 0,
+    risk: () => Number(row.RiskScore) || 0,
+  };
+  return (accessorMap[key] || accessorMap.score)();
 }
 
-document.addEventListener("DOMContentLoaded", init);
+function formatNumber(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '—';
+  if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
+  return `$${num.toFixed(0)}`;
+}
+
+document.addEventListener('DOMContentLoaded', init);
