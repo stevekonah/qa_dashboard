@@ -3,110 +3,149 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pathfinder QA Dashboard</title>
+  <title>QA Dashboard | Executive Overview</title>
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <div class="app">
+  <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand">
+      <div class="brand-block">
         <div class="brand-mark">Q</div>
-        <div class="brand-text">
-          <h1>QA Dashboard</h1>
-          <p>Quality Assurance</p>
+        <div>
+          <div class="brand-title">QA Dashboard</div>
+          <div class="brand-subtitle">Executive Overview</div>
         </div>
       </div>
 
-      <div class="side-block">
-        <p class="side-label">Filters</p>
-        <select class="filter-select" id="selRegion"><option value="">All regions</option></select>
-        <select class="filter-select" id="selCountry"><option value="">All countries</option></select>
-        <select class="filter-select" id="selProject"><option value="">All projects</option></select>
-        <select class="filter-select" id="selFunding"><option value="">All funders</option></select>
-        <select class="filter-select" id="selTech"><option value="">All technical areas</option></select>
-        <select class="filter-select" id="selYear"><option value="">All years</option></select>
-        <select class="filter-select" id="selQuarter"><option value="">All quarters</option></select>
-        <select class="filter-select" id="selStage">
+      <div class="sidebar-section">
+        <div class="section-label">Filters</div>
+        <select id="selRegion" class="filter-control">
+          <option value="">All regions</option>
+        </select>
+        <select id="selCountry" class="filter-control">
+          <option value="">All countries</option>
+        </select>
+        <select id="selProject" class="filter-control">
+          <option value="">All projects</option>
+        </select>
+        <select id="selFunding" class="filter-control">
+          <option value="">All funders</option>
+        </select>
+        <select id="selTech" class="filter-control">
+          <option value="">All technical areas</option>
+        </select>
+        <select id="selYear" class="filter-control">
+          <option value="">All years</option>
+        </select>
+        <select id="selQuarter" class="filter-control">
+          <option value="">All quarters</option>
+        </select>
+        <select id="selStage" class="filter-control">
           <option value="">All stages</option>
           <option value="Startup">Startup</option>
           <option value="Implementation">Implementation</option>
           <option value="Closeout">Closeout</option>
         </select>
-        <select class="filter-select" id="selStatus">
+        <select id="selStatus" class="filter-control">
           <option value="">All statuses</option>
           <option value="On Track">On Track</option>
           <option value="Needs Attention">Needs Attention</option>
           <option value="At Risk">At Risk</option>
         </select>
-        <button class="side-reset" id="btnReset">Reset filters</button>
+        <button id="btnReset" class="secondary-btn">Reset filters</button>
       </div>
 
-      <div class="side-block">
-        <p class="side-label">Navigate</p>
-        <a class="side-link" href="project.html">Project diagnostics →</a>
-        <a class="side-link" href="help.html">Help &amp; glossary →</a>
+      <div class="sidebar-section">
+        <div class="section-label">Navigate</div>
+        <a href="project.html" class="nav-link">Project diagnostics →</a>
+        <a href="help.html" class="nav-link">Help &amp; glossary →</a>
       </div>
 
-      <div class="side-source">
-        Source: KoboToolbox · <span id="updatedNote">—</span>
+      <div class="sidebar-footer">
+        <span class="muted-label">Source</span>
+        <div>KoboToolbox · <span id="updatedNote">—</span></div>
       </div>
     </aside>
 
-    <main class="main">
-      <div class="topbar">
+    <main class="main-panel">
+      <header class="topbar">
         <div>
-          <h2>Executive Overview</h2>
-          <p class="scope-line" id="scopeLine">Loading…</p>
+          <h1>Executive Overview</h1>
+          <div id="scopeLine" class="scope-line">Loading…</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn" id="btnExportExcel">Export Excel</button>
-          <button class="btn ghost" id="btnExportWord">Export Word</button>
+          <button id="btnExportExcel" class="primary-btn">Export Excel</button>
+          <button id="btnExportWord" class="ghost-btn">Export Word</button>
         </div>
-      </div>
+      </header>
 
-      <section class="stat-strip" id="statStrip"></section>
+      <section id="statStrip" class="stat-strip"></section>
 
-      <section class="grid-2">
-        <div class="card">
-          <h3>Projects by Status</h3>
+      <section class="panel-grid two-up">
+        <article class="glass-card">
+          <div class="card-header">
+            <h2>Projects by Status</h2>
+          </div>
           <canvas id="statusChart"></canvas>
-        </div>
-        <div class="card">
-          <h3>Checklists by Country</h3>
+        </article>
+
+        <article class="glass-card">
+          <div class="card-header">
+            <h2>Checklists by Country</h2>
+          </div>
           <canvas id="completionChart"></canvas>
-        </div>
+        </article>
       </section>
 
-      <section class="card">
-        <h3>Pillar Performance</h3>
-        <p class="card-note">Average score per pillar across the filtered scope.</p>
-        <div class="pillar-grid" id="pillarGrid"></div>
+      <article class="glass-card wide-card">
+        <div class="card-header">
+          <h2>Pillar Performance</h2>
+          <p>Average score per pillar across the filtered scope.</p>
+        </div>
+        <div id="pillarGrid" class="pillar-grid"></div>
+      </article>
+
+      <section class="panel-grid two-up">
+        <article class="glass-card">
+          <div class="card-header">
+            <h2>Projects at Risk</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Country</th><th>Project</th><th>Score</th><th>Risk</th></tr>
+              </thead>
+              <tbody id="riskTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="glass-card">
+          <div class="card-header">
+            <h2>Top 5 Concerns</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Issue</th><th>Frequency</th></tr>
+              </thead>
+              <tbody id="concernsTableBody"></tbody>
+            </table>
+          </div>
+        </article>
       </section>
 
-      <section class="grid-2">
-        <div class="card">
-          <h3>Projects At Risk</h3>
-          <table id="riskTable">
-            <thead><tr><th>Country</th><th>Project</th><th>Score</th><th>Risk</th></tr></thead>
-            <tbody></tbody>
-          </table>
+      <article class="glass-card wide-card">
+        <div class="card-header split-header">
+          <div>
+            <h2>All Projects</h2>
+          </div>
+          <input id="projectSearch" class="search-input" type="search" placeholder="Search project or country…">
         </div>
-        <div class="card">
-          <h3>Top 5 Concerns</h3>
-          <table id="concernsTable">
-            <thead><tr><th>Issue</th><th>Frequency</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="card">
-        <h3>All Projects</h3>
-        <input type="text" id="projectSearch" placeholder="Search project or country…" class="register-search">
-        <div class="register-wrap">
-          <table id="projectsTable" class="register">
+        <div class="table-wrap">
+          <table>
             <thead>
               <tr>
                 <th data-sort="country">Country</th>
@@ -119,14 +158,10 @@
                 <th data-sort="risk">Risk</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="projectsTableBody"></tbody>
           </table>
         </div>
-      </section>
-
-      <footer class="site-footer">
-        <span>Pathfinder International · Quality Assurance</span>
-      </footer>
+      </article>
     </main>
   </div>
 
