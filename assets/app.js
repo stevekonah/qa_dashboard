@@ -4,7 +4,7 @@
 
 const state = {
   data: [], filtered: [],
-  filters: { region:"", country:"", project:"", funding:"", tech:"", stage:"", status:"", search:"" },
+  filters: { region:"", country:"", project:"", funding:"", tech:"", year:"", quarter:"", stage:"", status:"", search:"" },
   sort: { key:"score", dir:"asc" },
   charts: {},
 };
@@ -60,14 +60,16 @@ function populateFilters() {
   fillProjectOptions("selProject");
   fill("selFunding", uniq("meta_funding_source"));
   fill("selTech", uniq("meta_technical_area"));
+  fill("selYear", uniq("meta_year").concat(uniq("year")));
+  fill("selQuarter", uniq("meta_quarter").concat(uniq("quarter")));
 }
 
 function fill(id, values) {
   const sel = document.getElementById(id);
   [...new Set(values)].filter(Boolean).sort().forEach(v => {
     const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v;
+    o.value = String(v);
+    o.textContent = String(v);
     sel.appendChild(o);
   });
 }
@@ -86,7 +88,7 @@ function fillProjectOptions(id) {
 }
 
 function wireEvents() {
-  const map = { selRegion:"region", selCountry:"country", selProject:"project", selFunding:"funding", selTech:"tech", selStage:"stage", selStatus:"status" };
+  const map = { selRegion:"region", selCountry:"country", selProject:"project", selFunding:"funding", selTech:"tech", selYear:"year", selQuarter:"quarter", selStage:"stage", selStatus:"status" };
   Object.entries(map).forEach(([id, key]) => {
     document.getElementById(id).addEventListener("change", e => { state.filters[key] = e.target.value; applyFilters(); });
   });
@@ -107,8 +109,8 @@ function wireEvents() {
 }
 
 function resetFilters() {
-  state.filters = { region:"", country:"", project:"", funding:"", tech:"", stage:"", status:"", search:"" };
-  ["selRegion","selCountry","selProject","selFunding","selTech","selStage","selStatus"].forEach(id => document.getElementById(id).value = "");
+  state.filters = { region:"", country:"", project:"", funding:"", tech:"", year:"", quarter:"", stage:"", status:"", search:"" };
+  ["selRegion","selCountry","selProject","selFunding","selTech","selYear","selQuarter","selStage","selStatus"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("projectSearch").value = "";
   applyFilters();
 }
@@ -124,14 +126,18 @@ function applyFilters() {
   state.filtered = state.data.filter(d => {
     const region = d.meta_region || d.region || "";
     const country = d.meta_country || d.country || "";
+    const year = String(d.meta_year ?? d.year ?? "");
+    const quarter = String(d.meta_quarter ?? d.quarter ?? "");
     const projectTitle = displayProjectName(d).toLowerCase();
-    const searchMatch = !f.search || projectTitle.includes(f.search) || (d.meta_country || d.country || "").toLowerCase().includes(f.search);
+    const searchMatch = !f.search || projectTitle.includes(f.search) || country.toLowerCase().includes(f.search);
 
     return (!f.region || region === f.region)
       && (!f.country || country === f.country)
       && (!f.project || d.project === f.project)
       && (!f.funding || d.meta_funding_source === f.funding)
       && (!f.tech || d.meta_technical_area === f.tech)
+      && (!f.year || year === String(f.year))
+      && (!f.quarter || quarter === String(f.quarter))
       && (!f.stage || stageMatches(d, f.stage))
       && (!f.status || d.ProjectStatus === f.status)
       && searchMatch;
@@ -248,7 +254,7 @@ function renderPillarGrid() {
 function renderRiskTable() {
   const atRisk = state.filtered.filter(d => d.ProjectStatus === "At Risk").slice(0, 5);
   document.querySelector("#riskTable tbody").innerHTML = atRisk.length
-    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${displayProjectName(d)}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${((d.RiskCategory || "").toLowerCase()) || "low"}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
+    ? atRisk.map(d => `<tr><td>${d.meta_country || d.country || "—"}</td><td>${displayProjectName(d)}</td><td class="tabular">${d.SubmissionScore ?? "—"}%</td><td><span class="badge ${((d.RiskCategory || "").toLowerCase())}">${d.RiskCategory || "—"}</span></td></tr>`).join("")
     : "<tr><td colspan='4'>No projects at risk 🎉</td></tr>";
 }
 
