@@ -1,22 +1,12 @@
 #!/usr/bin/env python3
-"""
-Enriches each submission with:
-  - <question>_AnswerC    0/1 effective score
-  - <question>_IsConcern  0/1 (flagged for prominence/filtering, independent of score)
-  - <question>_IssueTracking  str (only for open-ended concern questions)
-  - SubmissionScore, ConcernCount, ConcernQuestions
-  - ProjectStatus, RiskScore, RiskCategory, RiskAlert
-  - ProgrammaticScore, MELScore
-  - StartupScore, ImplementationScore, CloseoutScore
-  - meta_* (project metadata)
-"""
+"""Enrich Kobo submissions with checklist scores, concerns, and project metadata."""
 import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
-    NON_QUESTION_FIELDS,
+    NON_QUESTION_FIELDS, NEUTRAL_QUESTIONS, REVERSE_QUESTIONS,
     ON_TRACK_THRESHOLD, NEEDS_ATTENTION_THRESHOLD,
     RISK_CONCERN_WEIGHT, RISK_DEFICIT_WEIGHT,
     RISK_CRITICAL_THRESHOLD, RISK_HIGH_THRESHOLD, RISK_MEDIUM_THRESHOLD,
@@ -24,73 +14,51 @@ from config import (
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
-
-STAGE_MAP = {
-    "S": "Startup",
-    "I": "Implementation",
-    "C": "Closeout",
-}
+STAGE_MAP = {"S": "Startup", "I": "Implementation", "C": "Closeout"}
 
 
 def to_answer(value):
-    """Normalize a Kobo answer to 0/1. Return None for missing or invalid responses."""
+    """Normalize a Kobo answer to 0/1; return None for missing or invalid values."""
     if value is None:
         return None
-
     if isinstance(value, bool):
         return int(value)
-
     if isinstance(value, (int, float)):
-        if value in (0, 1):
-            return int(value)
-        return None
-
+        return int(value) if value in (0, 1) else None
     if isinstance(value, str):
         cleaned = value.strip().lower()
         if cleaned in {"1", "yes", "y", "true", "t"}:
             return 1
         if cleaned in {"0", "no", "n", "false", "f"}:
             return 0
-        if cleaned in {"", "na", "n/a", "none", "null"}:
-            return None
-        return None
-
     return None
 
 
-def stage_from_question(q):
-    """Return Startup/Implementation/Closeout based on question prefix."""
-    if not q or "." not in q:
+def stage_from_question(question):
+    if not question or "." not in question:
         return None
-    prefix = q.split(".")[0].upper()
-    return STAGE_MAP.get(prefix)
+    return STAGE_MAP.get(question.split(".")[0].upper())
 
 
 def get_question_rule(rules, key):
-    """Return the canonical checklist rule for a question, whichever polarity exists."""
     return rules.get(f"{key}|0") or rules.get(f"{key}|1")
 
 
 def question_is_scoreable(rules, key):
-    """A question is scoreable only if at least one answer polarity is defined in rules."""
     return f"{key}|0" in rules or f"{key}|1" in rules
 
 
 def score_submission(sub, rules, issue_tracking, project_lookup):
     scored = dict(sub)
-
-    # Use kobo_name (internal project identifier) as the key for metadata joining
     project_identifier = sub.get("project")
     project_meta = project_lookup.get(project_identifier) if isinstance(project_lookup, dict) else None
-
     if isinstance(project_meta, dict):
         for key, value in project_meta.items():
             scored[f"meta_{key}"] = value
-
-    if isinstance(project_meta, dict) and project_meta.get("project_title"):
-        scored["_display_project_name"] = project_meta.get("project_title")
-    else:
-        scored["_display_project_name"] = project_identifier or "Unknown"
+    scored["_display_project_name"] = (
+        project_meta.get("project_title") if isinstance(project_meta, dict) and project_meta.get("project_title")
+        else project_identifier or "Unknown"
+    )
 
     answer_scores = []
     concerns = []
@@ -98,9 +66,7 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
     pillar_scores = {"Programmatic": [], "MEL": []}
 
     for key, value in sub.items():
-        if key in NON_QUESTION_FIELDS:
-            continue
-        if key.startswith("_") or key.startswith("meta/"):
+        if key in NON_QUESTION_FIELDS or key.startswith("_") or key.startswith("meta/"):
             continue
         if not question_is_scoreable(rules, key):
             continue
@@ -109,94 +75,79 @@ def score_submission(sub, rules, issue_tracking, project_lookup):
         if answer is None:
             scored[f"{key}_AnswerC"] = None
             scored[f"{key}_IsConcern"] = 0
+            scored[f"{key}_ScoringType"] = "Neutral" if key in NEUTRAL_QUESTIONS else "Scored"
             continue
 
         base_rule = get_question_rule(rules, key)
-        exact_rule = rules.get(f"{key}|{answer}")
-        rule_for_metadata = exact_rule or base_rule
-
-        if rule_for_metadata is None:
+        answer_rule = rules.get(f"{key}|{answer}")
+        rule = answer_rule or base_rule
+        if rule is None:
             scored[f"{key}_AnswerC"] = None
             scored[f"{key}_IsConcern"] = 0
             continue
 
-        # Use the checklist score for the relevant answer instead of assuming any defined rule is a pass.
-        score = rule_for_metadata.get("score", 0)
-        is_concern = 1 if rule_for_metadata.get("is_concern") == 1 else 0
+        score = rule.get("score")
+        # The checklist score remains the source of truth; reverse-coded items invert it.
+        if key in REVERSE_QUESTIONS and score in (0, 1):
+            score = 1 - score
+        is_neutral = key in NEUTRAL_QUESTIONS
+        is_concern = int(rule.get("is_concern") == 1)
 
-        scored[f"{key}_AnswerC"] = score
+        # Keep neutral response rows identifiable but never include them in score totals.
+        scored[f"{key}_AnswerC"] = None if is_neutral else score
         scored[f"{key}_IsConcern"] = is_concern
-        answer_scores.append(score)
+        scored[f"{key}_ScoringType"] = "Neutral" if is_neutral else ("Reverse" if key in REVERSE_QUESTIONS else "Scored")
 
-        stage = rule_for_metadata.get("stage") or stage_from_question(key)
-        if stage in stage_scores:
-            stage_scores[stage].append(score)
+        if not is_neutral and score in (0, 1):
+            answer_scores.append(score)
+            stage = rule.get("stage") or stage_from_question(key)
+            if stage in stage_scores:
+                stage_scores[stage].append(score)
+            pillar = rule.get("pillar")
+            if pillar in pillar_scores:
+                pillar_scores[pillar].append(score)
 
-        pillar = rule_for_metadata.get("pillar")
-        if pillar in pillar_scores:
-            pillar_scores[pillar].append(score)
-
-        if is_concern == 1:
+        if is_concern:
             concerns.append({
                 "question": key,
-                "issue": rule_for_metadata.get("issue") or key,
-                "stage": rule_for_metadata.get("stage"),
-                "pillar": rule_for_metadata.get("pillar"),
+                "issue": rule.get("issue") or key,
+                "stage": rule.get("stage") or stage_from_question(key),
+                "pillar": rule.get("pillar"),
             })
-
         if key in issue_tracking:
             scored[f"{key}_IssueTracking"] = issue_tracking[key]
 
-    scored["SubmissionScore"] = (
-        round(100 * sum(answer_scores) / len(answer_scores), 1)
-        if answer_scores else None
-    )
+    scored["SubmissionScore"] = round(100 * sum(answer_scores) / len(answer_scores), 1) if answer_scores else None
     scored["ConcernCount"] = len(concerns)
     scored["ConcernQuestions"] = concerns
-
-    s = scored["SubmissionScore"]
-    if s is None:
+    score = scored["SubmissionScore"]
+    if score is None:
         scored["ProjectStatus"] = "No Data"
-    elif s >= ON_TRACK_THRESHOLD:
+    elif score >= ON_TRACK_THRESHOLD:
         scored["ProjectStatus"] = "On Track"
-    elif s >= NEEDS_ATTENTION_THRESHOLD:
+    elif score >= NEEDS_ATTENTION_THRESHOLD:
         scored["ProjectStatus"] = "Needs Attention"
     else:
         scored["ProjectStatus"] = "At Risk"
 
-    if s is not None:
-        scored["RiskScore"] = round(
-            (len(concerns) * RISK_CONCERN_WEIGHT)
-            + ((1 - s / 100) * RISK_DEFICIT_WEIGHT),
-            2,
-        )
-    else:
-        scored["RiskScore"] = None
-
-    rs = scored["RiskScore"]
-    if rs is None:
+    scored["RiskScore"] = round(len(concerns) * RISK_CONCERN_WEIGHT + (1 - score / 100) * RISK_DEFICIT_WEIGHT, 2) if score is not None else None
+    risk = scored["RiskScore"]
+    if risk is None:
         scored["RiskCategory"] = "Unknown"
-    elif rs >= RISK_CRITICAL_THRESHOLD:
+    elif risk >= RISK_CRITICAL_THRESHOLD:
         scored["RiskCategory"] = "Critical"
-    elif rs >= RISK_HIGH_THRESHOLD:
+    elif risk >= RISK_HIGH_THRESHOLD:
         scored["RiskCategory"] = "High"
-    elif rs >= RISK_MEDIUM_THRESHOLD:
+    elif risk >= RISK_MEDIUM_THRESHOLD:
         scored["RiskCategory"] = "Medium"
     else:
         scored["RiskCategory"] = "Low"
+    scored["RiskAlert"] = "⚠ High Risk" if score is not None and score < 60 else "OK"
 
-    scored["RiskAlert"] = "⚠ High Risk" if (s is not None and s < 60) else "OK"
-
-    for stage, arr in stage_scores.items():
-        scored[f"{stage}Score"] = (
-            round(100 * sum(arr) / len(arr), 1) if arr else None
-        )
-
-    for pillar, arr in pillar_scores.items():
-        scored[f"{pillar}Score"] = (
-            round(100 * sum(arr) / len(arr), 1) if arr else None
-        )
-
+    for stage, values in stage_scores.items():
+        scored[f"{stage}Score"] = round(100 * sum(values) / len(values), 1) if values else None
+    for pillar, values in pillar_scores.items():
+        scored[f"{pillar}Score"] = round(100 * sum(values) / len(values), 1) if values else None
     return scored
 
 
@@ -209,15 +160,8 @@ def main():
         issue_tracking = json.load(f)
     with open(os.path.join(DATA_DIR, "active_projects.json")) as f:
         projects = json.load(f)
-
-    # Build project lookup keyed by kobo_name (the stable internal identifier)
-    project_lookup = {p["kobo_name"]: p for p in projects}
-
-    scored = [
-        score_submission(s, rules, issue_tracking, project_lookup)
-        for s in submissions
-    ]
-
+    project_lookup = {project["kobo_name"]: project for project in projects}
+    scored = [score_submission(submission, rules, issue_tracking, project_lookup) for submission in submissions]
     with open(os.path.join(DATA_DIR, "live_submissions_scored.json"), "w") as f:
         json.dump(scored, f, indent=1)
     print(f"Scored {len(scored)} submissions")
